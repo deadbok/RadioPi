@@ -27,3 +27,9 @@ Web interface
   * lcdprog-python
   * python-mpd
  
+ 
+ Tips
+ ====
+ 
+ Use djmount to mount UPNP shares in MPD's music library directory and have MPD
+ support UPNP/DLNA.

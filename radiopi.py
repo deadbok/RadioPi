@@ -11,7 +11,9 @@ from lcdproc.server import Server
 from mpd import MPDClient
 import log
 import logging
-
+from players import MpdMusic
+from ui import screens
+import sys
 
 VERSION = '0.1'
 
@@ -37,13 +39,16 @@ def connect_lcdd(host='localhost'):
     log.logger.debug('Port: ' + str(port))
 
     try:
-        lcd = Server()
+        lcd = Server(hostname, port, True)
+        lcd.start_session()
+        log.logger.debug('Connection succeeded')
     except Exception as exception:
         log.logger.info('Can not connect to LCDd on ' + host)
         log.logger.debug('Exception: ' + str(exception.errno))
         log.logger.debug('Message: ' + exception.strerror)
-    log.logger.debug('Connection succeeded')
-
+        sys.exit(1)
+    # Hangs because LCDd returns nothing on my machine
+    # log.logger.debug(lcd.request('info'))
     return(lcd)
 
 
@@ -70,12 +75,13 @@ def connect_mpd(host='localhost'):
     try:
         mpdc = MPDClient()
         mpdc.connect(hostname, port)
+        log.logger.debug('Connection succeeded')
+        log.logger.debug('MPD status: ' + str(mpdc.status()))
     except Exception as exception:
         log.logger.info('Can not connect to mpdd on ' + host)
         log.logger.debug('Exception: ' + str(exception.errno))
         log.logger.debug('Message: ' + exception.strerror)
-    log.logger.debug('Connection succeeded')
-    log.logger.debug('MPD status: ' + str(mpdc.status()))
+        sys.exit(1)
 
     return(mpdc)
 
@@ -84,9 +90,7 @@ def main():
     '''
     Main entry point for RadioPi.
     '''
-    # mpd hostname or ip
-    mpd_host = "localhost"
-
+    # Parse command line
     usage = "usage: %prog [options] lcd_host[:port] mpd_host[:port]"
     arg_parser = optparse.OptionParser(usage=usage)
     arg_parser.add_option("-v", "--verbose",
@@ -124,10 +128,6 @@ def main():
     else:
         log.init_console_log()
 
-    # Save the hosts
-    if len(args) > 1:
-        mpd_host = args[1]
-
     log.logger.info("RadioPi V" + VERSION)
 
     # Connect to LCDd
@@ -137,11 +137,23 @@ def main():
         lcd = connect_lcdd()
 
     # Connect to mpd
-    if len(args) > 0:
-        mpdc = connect_mpd(args[0])
+    if len(args) > 1:
+        mpdc = connect_mpd(args[1])
     else:
         mpdc = connect_mpd()
 
+    # Initialise players
+    play_music = MpdMusic.MpdMusic(mpdc)
+
+    scr_lcd = screens.Screens(lcd)
+
+    scr_lcd.status.lines[1] = "bla"
+    scr_lcd.status.lines[2] = "bla bla"
+    scr_lcd.status.lines[3] = "bla bla bla"
+
+    while(1):
+        scr_lcd.status.update()
+        print(lcd.poll())
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 '''
-Log module for mtl.
+Log module.
 
 @since: 22 Aug 2011
 @author: oblivion
@@ -8,7 +8,7 @@ import logging
 from logging import handlers
 import sys
 
-logger = logging.getLogger("mtl")
+logger = logging.getLogger("RadioPi")
 '''Our Logger object'''
 
 logger.setLevel(logging.DEBUG)

@@ -7,7 +7,7 @@ function as a sort of portable radio/media player.
 '''
 import optparse
 from urllib.parse import urlparse
-from lcdproc.server import Server
+from lcdprocc.client import Client
 from mpd import MPDClient
 import log
 import logging
@@ -39,10 +39,12 @@ def connect_lcdd(host='localhost'):
     log.logger.debug('Port: ' + str(port))
 
     try:
-        lcd = Server(hostname, port, True)
-        lcd.start_session()
+        lcd = Client(hostname, port)
+        lcd.request('client_set', '-name RadioPi')
         log.logger.debug('Connection succeeded')
-    except Exception as exception:
+        # Put the hook in place
+        lcd.response_hook = lcd_hook
+    except OSError as exception:
         log.logger.info('Can not connect to LCDd on ' + host)
         log.logger.debug('Exception: ' + str(exception.errno))
         log.logger.debug('Message: ' + exception.strerror)
@@ -77,13 +79,19 @@ def connect_mpd(host='localhost'):
         mpdc.connect(hostname, port)
         log.logger.debug('Connection succeeded')
         log.logger.debug('MPD status: ' + str(mpdc.status()))
-    except Exception as exception:
+    except OSError as exception:
         log.logger.info('Can not connect to mpdd on ' + host)
         log.logger.debug('Exception: ' + str(exception.errno))
         log.logger.debug('Message: ' + exception.strerror)
         sys.exit(1)
 
     return(mpdc)
+
+
+def lcd_hook(response):
+    log.logger.debug("Response: " + response)
+    if not response == None:
+        print(response)
 
 
 def main():
@@ -151,9 +159,15 @@ def main():
     scr_lcd.status.lines[2] = "bla bla"
     scr_lcd.status.lines[3] = "bla bla bla"
 
+    # Root menu
+    lcd.request('menu_add_item', '"" radio menu "Radio"')
+    lcd.request('menu_add_item', '"" music menu "Music"')
+    lcd.request('menu_add_item', '"" settings menu "Settings"')
+
     while(1):
         scr_lcd.status.update()
-        print(lcd.poll())
+        lcd.poll()
+        print('.', end='')
 
 if __name__ == '__main__':
     main()

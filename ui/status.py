@@ -12,10 +12,8 @@ class Status(object):
     '''
     Class holding the default status screen.
     '''
-    screen = None
-    '''LCDd screen.'''
-    widgets = [None, None, None, None]
-    '''Widgets on the screen.'''
+    id = 'status'
+    lcd = None
     lines = ['', '', '', '']
     '''Lines on the LCD.'''
 
@@ -27,14 +25,15 @@ class Status(object):
         @type lcd: lcdproc.server.Server
         '''
         log.logger.debug("Creating status screen.")
+        self.lcd = lcd
         # Create status screen
-        self.screen = lcd.add_screen('status')
-        self.screen.set_priority('info')
+        lcd.request('screen_add', self.id)
+        lcd.request('screen_set', self.id + ' -priority info')
         # Add lines of text
-        self.widgets[0] = self.screen.add_string_widget('sys_status', y=1)
-        self.widgets[1] = self.screen.add_string_widget('line1', y=2)
-        self.widgets[2] = self.screen.add_string_widget('line2', y=3)
-        self.widgets[3] = self.screen.add_string_widget('line3', y=4)
+        self.lcd.request('widget_add', self.id + ' line1 string')
+        self.lcd.request('widget_add', self.id + ' line2 string')
+        self.lcd.request('widget_add', self.id + ' line3 string')
+        self.lcd.request('widget_add', self.id + ' line4 string')
 
     def update(self):
         '''
@@ -45,5 +44,6 @@ class Status(object):
         self.lines[0] = strftime('%H:%M', localtime())
         # Update custom lines
         for i in range(0, 4):
-            self.widgets[i].set_text(self.lines[i])
-            self.widgets[i].update()
+            self.lcd.request('widget_set', self.id + ' line' + str(i + 1)
+                             + ' 1 ' + str(i + 1) + ' "' + self.lines[i]
+                             + '"')

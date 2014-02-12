@@ -33,3 +33,5 @@ Web interface
  
  Use djmount to mount UPNP shares in MPD's music library directory and have MPD
  support UPNP/DLNA.
+ Use usbmount to mount usb mass storage devices in MPD's music library directory and have MPD
+ play music from them.

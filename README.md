@@ -27,6 +27,10 @@ Web interface
   * lcdprog-python
   * python-mpd
  
+ Misc
+ ====
+ Sorry about using both " and ' all over the place, I'm trying to use ' 
+ consistently, but I have an old habit from my C days.
  
  Tips
  ====

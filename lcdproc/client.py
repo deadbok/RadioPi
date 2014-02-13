@@ -6,10 +6,11 @@ import log
 
 class Client(object):
     '''
-    LCDproc client Object
+    LCDproc client
     '''
     response_hook = None
-
+    '''Hook to handle responses from LCDd, "huh" and "success" are filtered out.
+    Set this to a function that expects the response as a parameter.'''
     def __init__(self, hostname="localhost", port=13666):
         '''
         Constructor.
@@ -18,7 +19,6 @@ class Client(object):
         @type hostname: string
         @param port: Port of the LCDd.
         @type port: int
-        @param logger: A logger instance to output debug information to
         '''
         self.hostname = hostname
         self.port = port
@@ -46,6 +46,7 @@ class Client(object):
         @type command: string
         @param param: The parameters to send with the command
         @type param: string
+        @return: The response from LCDd
         '''
         log.logger.debug("Request: " + command + ' ' + param)
         self.server.write((command + ' ' + param + "\n").encode())
@@ -57,7 +58,8 @@ class Client(object):
 
     def request(self, command, param):
         '''
-        Send a request to LCDd.
+        Send a request to LCDd. Wait for a response, and send unknown responses
+        to the hook.
 
         @param command: The command to send to LCDd.
         @type command: string
@@ -74,6 +76,13 @@ class Client(object):
             response = self.poll()
 
     def check_response(self, response):
+        '''
+        Check if the response is something we should deal with.
+
+        @param response: The response from LCDd
+        @type response: string
+        @return: True if we know the response else return False
+        '''
         if not response == None:
             if "success" in response:
                 return(True)
@@ -84,9 +93,9 @@ class Client(object):
 
     def poll(self):
         '''
-        Get the status from LCDd.
+        Get the status from LCDd. If the answer is unknown send it on to the
+        hook.
         '''
-        log.logger.debug("Polling LCDd")
         # Check if server is ready for reading
         while  select([self.server], [], [], 0) == ([self.server], [], []):
             response = unquote(self.server.read_until(b"\n").decode())
@@ -96,7 +105,7 @@ class Client(object):
                 return response
             # Send the response on to the hook
             else:
-                self.response_hook(response)
+                if not self.response_hook == None:
+                    self.response_hook(response)
 
         return None
-

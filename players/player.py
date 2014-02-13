@@ -23,7 +23,7 @@ class Player(object):
         '''
         self.name = name
 
-    def get_items(self):
+    def get_items(self, uri):
         '''
         Return a list of all playable items.
         '''

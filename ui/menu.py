@@ -28,28 +28,35 @@ class Menu(object):
                              + '"')
         # Root Settings menu
         self.lcd.request('menu_add_item', '"" Settings menu "Settings"')
+        # Get out of the menu
+        self.lcd.request('menu_add_item', '"" back action "< Back"')
+        self.lcd.request('menu_set_item', '"" back -next _quit_')
+
         # There can be only one. Only display our menu
         self.lcd.request('menu_set_main', '""')
 
-    def generate_selection_list(self, menu, list):
+    def generate_selection_list(self, menu, lst):
         '''
         Generate a list menu, meant for listing files or playlists.
         '''
         log.logger.debug('Generating list menu')
         i = 0
-        for item in list:
+        for item in lst:
             self.lcd.request('menu_add_item', '"' + menu + '" ' + str(i)
                          + ' action "' + item + '"')
             self.lcd.request('menu_set_item', '"' + menu + '" ' + str(i)
                              + ' -next _quit_')
             i += 1
+        self.lcd.request('menu_add_item', '"' + menu
+                         + '" dback action "< Back"')
 
-    def delete_selection_list(self, menu, list):
+    def delete_selection_list(self, menu, lst):
         '''
         Delete a list menu.
         '''
         log.logger.debug('Deleting list menu')
         i = 0
-        for item in list:
+        for item in lst:
             self.lcd.request('menu_del_item', '"' + menu + '" ' + str(i))
             i += 1
+        self.lcd.request('menu_del_item', '"' + menu + '" dback')

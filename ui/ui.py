@@ -75,10 +75,19 @@ class UI(object):
         '''
         Tell that we are busy in the hook.
         '''
+        log.logger.debug('Entering lcd hook')
         self.lcd.hook_busy = True
 
     def leave_hook(self):
         '''
         Tell that we are ready again.
         '''
+        log.logger.debug('Leaving lcd hook')
         self.lcd.hook_busy = False
+
+    def status_update(self, title):
+        '''
+        Update the status screen.
+        '''
+        self.status.lines[2] = title
+        self.status.update()

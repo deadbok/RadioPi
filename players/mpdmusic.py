@@ -29,6 +29,8 @@ class MpdMusic(Player):
         self.mpd.update()
         # Remove the song from the playlist when done
         self.mpd.consume(1)
+        # Clear the playlist
+        self.mpd.clear()
 
     def get_items(self, uri):
         items = self.mpd.listall()
@@ -55,8 +57,11 @@ class MpdMusic(Player):
 
     def get_playing(self):
         '''
-        Get the curently playing song.
+        Get the currently playing song.
         '''
         info = self.mpd.currentsong()
-        song = self.mpd.playlistid(info['id'])
-        return(song[0]['title'])
+        if 'id' in info.keys():
+            song = self.mpd.playlistid(info['id'])
+            return(song[0]['title'])
+        else:
+            return('')

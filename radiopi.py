@@ -91,6 +91,16 @@ class RadioPi(object):
         self.ui.generate_root_menu(self.players.players)
         self.ui.set_event_hook(self.event_hook)
 
+    def status_update(self):
+        '''
+        Update the status screen.
+        '''
+        title = ''
+        if not self.current_player == None:
+            title = self.current_player.get_playing()
+        self.ui.status_update(title)
+        self.ui.status.update()
+
     def main_loop(self):
         # Initial paint of the status screen
         self.ui.status.update()
@@ -98,9 +108,7 @@ class RadioPi(object):
             # Only update display every 1000th time
             if self.loops == 10:
                 self.loops = 0
-                if not self.current_player == None:
-                    self.ui.status.lines[2] = self.current_player.get_playing()
-                self.ui.status.update()
+                self.status_update()
 
             self.ui.lcd.poll()
 
@@ -134,11 +142,14 @@ class RadioPi(object):
             # Something has been selected
             if 'select' in event:
                 event = event.replace('select ', '')
-                # Add to playlist
-                self.current_player.add_item(self.menu_items[int(event)])
-                # Start playing if stopped
-                if not self.current_player.playing:
-                    self.current_player.play()
+                # Only react on numbered menu selections
+                if event.isdigit():
+                    # Add to playlist
+                    self.current_player.add_item(self.menu_items[int(event)])
+                    # Start playing if stopped
+                    if not self.current_player.playing:
+                        self.current_player.play()
+                        self.status_update()
             # The menu has been left
             if 'leave' in event:
                 event = event.replace('leave ', '')
@@ -146,7 +157,7 @@ class RadioPi(object):
                 if event == self.menu_name:
                     self.ui.menu.delete_selection_list(event, self.menu_items)
                 # Update the status display
-                self.ui.status.update()
+                # self.ui.status.update()
         # Tell that we're done
         self.ui.leave_hook()
 

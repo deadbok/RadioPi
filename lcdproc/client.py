@@ -143,10 +143,10 @@ class Client(object):
                 if not self.response_hook == None:
                     # Queue responses if hook is busy or we are waiting for
                     # a response to a request
-                    if self.hook_busy or request:
-                        log.logger.debug('Adding to queue: ' + response)
-                        self.response_queue.append(response)
-                    else:
-                        self.response_hook(response)
+                    # if self.hook_busy or request:
+                    log.logger.debug('Adding to queue: ' + response)
+                    self.response_queue.append(response)
+                    # else:
+                        # self.response_hook(response)
 
         return(None)

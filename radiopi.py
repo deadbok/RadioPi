@@ -92,22 +92,21 @@ class RadioPi(object):
         self.ui.set_event_hook(self.event_hook)
 
     def main_loop(self):
+        # Initial paint of the status screen
+        self.ui.status.update()
         while(1):
             # Only update display every 1000th time
-            # if self.loops == 1000:
-                # self.loops = 0
-                # if not self.current_player == None:
-                    # self.ui.status.lines[2] = self.current_player.get_playing()
-                # self.ui.status.update()
-            if not self.current_player == None:
-                self.ui.status.lines[2] = self.current_player.get_playing()
-            self.ui.status.update()
+            if self.loops == 10:
+                self.loops = 0
+                if not self.current_player == None:
+                    self.ui.status.lines[2] = self.current_player.get_playing()
+                self.ui.status.update()
 
             self.ui.lcd.poll()
 
             sleep(0.5)
             # Count loops
-            # self.loops += 1
+            self.loops += 1
 
     def event_hook(self, event):
         '''
@@ -146,6 +145,8 @@ class RadioPi(object):
                 # Clear the menu if it is dynamic
                 if event == self.menu_name:
                     self.ui.menu.delete_selection_list(event, self.menu_items)
+                # Update the status display
+                self.ui.status.update()
         # Tell that we're done
         self.ui.leave_hook()
 

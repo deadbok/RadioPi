@@ -124,9 +124,10 @@ class Client(object):
         hook.
         '''
         # Pass on queued responses if the hook is ready
-        if (len(self.response_queue) > 0) and not (self.hook_busy):
-            log.logger.debug("Serving from queue.")
-            self.response_hook(self.response_queue.popleft())
+        if not request:
+            if (len(self.response_queue) > 0) and not (self.hook_busy):
+                log.logger.debug("Serving from queue.")
+                self.response_hook(self.response_queue.popleft())
         # Check if server is ready for reading
         while select([self.server], [], [], 0) == ([self.server], [], []):
             response = unquote(self.server.read_until(b"\n").decode())
@@ -140,8 +141,9 @@ class Client(object):
             # Send the response on to the hook
             else:
                 if not self.response_hook == None:
-                    # Queue responses if hook is busy
-                    if self.hook_busy:
+                    # Queue responses if hook is busy or we are waiting for
+                    # a response to a request
+                    if self.hook_busy or request:
                         log.logger.debug('Adding to queue: ' + response)
                         self.response_queue.append(response)
                     else:

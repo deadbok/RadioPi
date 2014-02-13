@@ -70,3 +70,15 @@ class UI(object):
         log.logger.debug("Setting event hook to: " + str(hook))
         # Route messages from LCDd to the hook function
         self.lcd.response_hook = hook
+
+    def enter_hook(self):
+        '''
+        Tell that we are busy in the hook.
+        '''
+        self.lcd.hook_busy = True
+
+    def leave_hook(self):
+        '''
+        Tell that we are ready again.
+        '''
+        self.lcd.hook_busy = False

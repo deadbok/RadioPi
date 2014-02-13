@@ -1,7 +1,20 @@
 import telnetlib
 from urllib.parse import unquote
 from select import select
+from collections import deque
 import log
+
+
+class LCDprocError(Exception):
+    pass
+
+
+class CommandError(LCDprocError):
+    pass
+
+
+class ProtocolError(LCDprocError):
+    pass
 
 
 class Client(object):
@@ -11,6 +24,14 @@ class Client(object):
     response_hook = None
     '''Hook to handle responses from LCDd, "huh" and "success" are filtered out.
     Set this to a function that expects the response as a parameter.'''
+    hook_busy = False
+    '''
+    Set if hook can not accept input.
+    '''
+    response_queue = deque()
+    '''
+    Queued responses.
+    '''
     def __init__(self, hostname="localhost", port=13666):
         '''
         Constructor.
@@ -70,10 +91,16 @@ class Client(object):
         log.logger.debug("Request: " + command + ' ' + param)
         self.server.write((command + ' ' + param + "\n").encode())
         # Wait for return status
-        response = self.poll()
+        response = self.poll(True)
         # wait for an acceptable answer
         while not self.check_response(response):
-            response = self.poll()
+            response = self.poll(True)
+        # Handle error
+        if 'success' not in response:
+            if 'huh' in response:
+                raise CommandError('LCDproc returned: ' + response)
+            else:
+                raise ProtocolError('LCDproc returned: ' + response)
 
     def check_response(self, response):
         '''
@@ -91,21 +118,33 @@ class Client(object):
 
         return(False)
 
-    def poll(self):
+    def poll(self, request=False):
         '''
         Get the status from LCDd. If the answer is unknown send it on to the
         hook.
         '''
+        # Pass on queued responses if the hook is ready
+        if (len(self.response_queue) > 0) and not (self.hook_busy):
+            log.logger.debug("Serving from queue.")
+            self.response_hook(self.response_queue.popleft())
         # Check if server is ready for reading
-        while  select([self.server], [], [], 0) == ([self.server], [], []):
+        while select([self.server], [], [], 0) == ([self.server], [], []):
             response = unquote(self.server.read_until(b"\n").decode())
             log.logger.debug("Response: " + response)
             # Do we understand the response
             if self.check_response(response):
-                return response
+                if request:
+                        return response
+                else:
+                    raise ProtocolError('Unexpected response: ' + response)
             # Send the response on to the hook
             else:
                 if not self.response_hook == None:
-                    self.response_hook(response)
+                    # Queue responses if hook is busy
+                    if self.hook_busy:
+                        log.logger.debug('Adding to queue: ' + response)
+                        self.response_queue.append(response)
+                    else:
+                        self.response_hook(response)
 
-        return None
+        return(None)

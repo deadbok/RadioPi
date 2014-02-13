@@ -27,6 +27,8 @@ class MpdMusic(Player):
         # TODO: Remove this and make a menu entry or make it dynamic
         # Update database
         self.mpd.update()
+        # Remove the song from the playlist when done
+        self.mpd.consume(1)
 
     def get_items(self, uri):
         items = self.mpd.listall()
@@ -35,3 +37,26 @@ class MpdMusic(Player):
             if 'file' in item:
                 filelist.append(item['file'])
         return(filelist)
+
+    def add_item(self, uri):
+        '''
+        Add an item to the playlist.
+        '''
+        log.logger.debug("Adding: " + uri)
+        self.mpd.add(uri)
+
+    def play(self):
+        '''
+        Play the current playlist.
+        '''
+        log.logger.debug("Playing...")
+        self.playing = True
+        self.mpd.play(0)
+
+    def get_playing(self):
+        '''
+        Get the curently playing song.
+        '''
+        info = self.mpd.currentsong()
+        song = self.mpd.playlistid(info['id'])
+        return(song[0]['title'])

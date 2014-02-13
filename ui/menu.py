@@ -5,7 +5,6 @@
 '''
 import log
 
-
 class Menu(object):
     '''
     All menu stuff
@@ -40,7 +39,9 @@ class Menu(object):
         i = 0
         for item in list:
             self.lcd.request('menu_add_item', '"' + menu + '" ' + str(i)
-                         + ' action "' + item + '" -next _quit_')
+                         + ' action "' + item + '"')
+            self.lcd.request('menu_set_item', '"' + menu + '" ' + str(i)
+                             + ' -next _quit_')
             i += 1
 
     def delete_selection_list(self, menu, list):

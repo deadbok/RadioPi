@@ -10,7 +10,11 @@ class Menu(object):
     All menu stuff
     '''
     lcd = None
-
+    '''Connection to LCDd'''
+    dynamic_menu = dict()
+    '''List of items in the current dynamic menu'''
+    dynamic_menu_name = ''
+    '''Name of the current dynamic menu'''
     def __init__(self, lcd, players):
         '''
         Constructor
@@ -35,28 +39,37 @@ class Menu(object):
         # There can be only one. Only display our menu
         self.lcd.request('menu_set_main', '""')
 
-    def generate_selection_list(self, menu, lst):
+    def generate_selection_list(self, menu, items):
         '''
         Generate a list menu, meant for listing files or playlists.
         '''
-        log.logger.debug('Generating list menu')
-        i = 0
-        for item in lst:
-            self.lcd.request('menu_add_item', '"' + menu + '" ' + str(i)
-                         + ' action "' + item + '"')
-            self.lcd.request('menu_set_item', '"' + menu + '" ' + str(i)
-                             + ' -next _quit_')
-            i += 1
+        log.logger.debug('Generating list menu: ' + menu)
+        self.dynamic_menu_name = menu
+        self.dynamic_menu = items
+        for item in items.items():
+            if 'action' in item:
+                # Create the an item that closes the meu when selected
+                self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
+                             + '" action "' + item[0] + '"')
+                self.lcd.request('menu_set_item', '"' + menu + '" "' + item[0]
+                                 + '" -next _quit_')
+            elif 'menu' in item:
+                # Create the an item that closes the meu when selected
+                self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
+                             + '" menu "' + item[0] + '"')
         self.lcd.request('menu_add_item', '"' + menu
                          + '" dback action "< Back"')
 
-    def delete_selection_list(self, menu, lst):
+    def delete_selection_list(self, menu=''):
         '''
         Delete a list menu.
         '''
-        log.logger.debug('Deleting list menu')
-        i = 0
-        for item in lst:
-            self.lcd.request('menu_del_item', '"' + menu + '" ' + str(i))
-            i += 1
-        self.lcd.request('menu_del_item', '"' + menu + '" dback')
+        # Clear the menu if it's the right one.
+        # If '' an empty string is given the menu is cleared
+        if (menu == self.dynamic_menu_name) or (menu == ''):
+            log.logger.debug('Deleting list menu: ' + menu)
+            for item in self.dynamic_menu:
+                self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
+                                 + '" "' + item + '"')
+            self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
+                             + '" dback')

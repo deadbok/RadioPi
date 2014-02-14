@@ -23,10 +23,6 @@ class RadioPi(object):
     '''All players.'''
     ui = None
     '''All UI stuff.'''
-    menu_items = list()
-    '''List of current dynamic menu items.'''
-    menu_name = ''
-    '''Current name of the dynamic menu.'''
     current_player = None
     '''Current player.'''
     loops = 0
@@ -135,29 +131,23 @@ class RadioPi(object):
                 if event in self.players.players.keys():
                     # Save the player
                     self.current_player = self.players.players[event]
-                    self.menu_items = self.current_player.get_items('/')
-                    self.ui.menu.generate_selection_list(event, self.menu_items)
-                    self.menu_name = event
+                    self.ui.menu.generate_selection_list(event,
+                                                         self.current_player.get_items('/'))
 
             # Something has been selected
             if 'select' in event:
                 event = event.replace('select ', '')
-                # Only react on numbered menu selections
-                if event.isdigit():
-                    # Add to playlist
-                    self.current_player.add_item(self.menu_items[int(event)])
-                    # Start playing if stopped
-                    if not self.current_player.playing:
-                        self.current_player.play()
-                        self.status_update()
+                # Add to playlist
+                self.current_player.add_item(event)
+                # Start playing if stopped
+                if not self.current_player.playing:
+                    self.current_player.play()
+                    self.status_update()
             # The menu has been left
             if 'leave' in event:
                 event = event.replace('leave ', '')
-                # Clear the menu if it is dynamic
-                if event == self.menu_name:
-                    self.ui.menu.delete_selection_list(event, self.menu_items)
-                # Update the status display
-                # self.ui.status.update()
+                # Clear the menu if it needs to
+                self.ui.menu.delete_selection_list(event)
         # Tell that we're done
         self.ui.leave_hook()
 

@@ -34,11 +34,17 @@ class MpdMusic(Player):
 
     def get_items(self, uri):
         items = self.mpd.listall()
-        filelist = list()
+        menu = dict()
         for item in items:
             if 'file' in item:
-                filelist.append(item['file'])
-        return(filelist)
+                # Ignore files in sub directories
+                if '/' not in item['file']:
+                    menu[item['file']] = 'action'
+            elif 'directory' in item:
+                # Ignore sub directories
+                if '/' not in item['directory']:
+                    menu[item['directory']] = 'menu'
+        return(menu)
 
     def add_item(self, uri):
         '''

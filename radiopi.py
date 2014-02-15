@@ -11,6 +11,7 @@ import logging
 from players.players import Players
 from ui.ui import UI
 from time import sleep
+from sm import StateMachine
 
 VERSION = '0.1'
 
@@ -27,6 +28,10 @@ class RadioPi(object):
     '''Current player.'''
     loops = 0
     '''Counter to tell how many times we've been in the main loop.'''
+    state_machine = None
+    '''The state machine directing the main loop.'''
+    current_event = ''
+    '''The current event that we are handling.'''
     def __init__(self):
         '''
         Constructor.
@@ -86,31 +91,66 @@ class RadioPi(object):
         self.ui = UI(lcd_host)
         self.ui.generate_root_menu(self.players.players)
         self.ui.set_event_hook(self.event_hook)
+        # Initialise the state machine
+        self.state_machine = StateMachine()
+        # Add states
+        self.state_machine.create_state('default_update', self.default_update)
+        self.state_machine.set_default('default_update')
+        self.state_machine.create_state('leave_menu', self.leave_menu)
+        self.state_machine.create_state('play', self.play)
+        self.state_machine.create_state('enter_menu', self.enter_menu)
 
-    def status_update(self):
+    def default_update(self):
         '''
-        Update the status screen.
+        Default update state to run when there's nothing much to do.
         '''
-        title = ''
-        if not self.current_player == None:
-            title = self.current_player.get_playing()
-        self.ui.status_update(title)
-        self.ui.status.update()
+        # Do not update display every time
+        if self.loops == 1000000:
+            self.loops = 0
+            title = ''
+            # Get the current title if any
+            if not self.current_player == None:
+                title = self.current_player.get_playing()
+            self.ui.status_update(title)
+        # Poll the lcd for messages
+        self.ui.lcd.poll()
+        # Increase the loop counter
+        self.loops += 1
+
+    def enter_menu(self):
+        '''
+        Run when the lcd says a menu has been entered.
+        '''
+        # Check if it is one of the player menus
+        if self.current_event in self.players.players.keys():
+            # Save the player
+            self.current_player = self.players.players[self.current_event]
+            self.ui.menu.generate_selection_list(self.current_event,
+                                                 self.current_player.get_items('/'))
+
+    def leave_menu(self):
+        '''
+        Run when the lcd says a menu has been left.
+        '''
+        # Clear the menu if it needs to
+        self.ui.menu.delete_selection_list(self.current_event)
+
+    def play(self):
+        '''
+        Play something if its the right thing to do.
+        '''
+        # Add to playlist
+        self.current_player.add_item(event)
+        # Start playing if stopped
+        if not self.current_player.playing:
+            self.current_player.play()
+            self.status_update()
 
     def main_loop(self):
         # Initial paint of the status screen
         self.ui.status.update()
         while(1):
-            # Only update display every 1000th time
-            if self.loops == 10:
-                self.loops = 0
-                self.status_update()
-
-            self.ui.lcd.poll()
-
-            sleep(0.5)
-            # Count loops
-            self.loops += 1
+            self.state_machine.next_state()
 
     def event_hook(self, event):
         '''
@@ -126,28 +166,16 @@ class RadioPi(object):
             event = event.replace('menuevent ', '')
             # A menu has been entered
             if 'enter' in event:
-                event = event.replace('enter ', '')
-                # Check if it is one of the player menus
-                if event in self.players.players.keys():
-                    # Save the player
-                    self.current_player = self.players.players[event]
-                    self.ui.menu.generate_selection_list(event,
-                                                         self.current_player.get_items('/'))
-
+                self.current_event = event.replace('enter ', '')
+                self.state_machine.queue_state('enter_menu')
             # Something has been selected
             if 'select' in event:
-                event = event.replace('select ', '')
-                # Add to playlist
-                self.current_player.add_item(event)
-                # Start playing if stopped
-                if not self.current_player.playing:
-                    self.current_player.play()
-                    self.status_update()
+                self.current_event = event.replace('select ', '')
+                self.state_machine.queue_state('play')
             # The menu has been left
             if 'leave' in event:
-                event = event.replace('leave ', '')
-                # Clear the menu if it needs to
-                self.ui.menu.delete_selection_list(event)
+                self.current_event = event.replace('leave ', '')
+                self.state_machine.queue_state('leave_menu')
         # Tell that we're done
         self.ui.leave_hook()
 

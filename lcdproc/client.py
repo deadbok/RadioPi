@@ -93,7 +93,7 @@ class Client(object):
         # Wait for return status
         response = self.poll(True)
         # wait for an acceptable answer
-        while not self.check_response(response):
+        while response == None:
             response = self.poll(True)
         # Handle error
         if 'success' not in response:
@@ -135,18 +135,13 @@ class Client(object):
             # Do we understand the response
             if self.check_response(response):
                 if request:
-                        return response
+                    log.logger.debug('Leaving poll: ' + response)
+                    return response
                 else:
                     raise ProtocolError('Unexpected response: ' + response)
             # Send the response on to the hook
             else:
                 if not self.response_hook == None:
-                    # Queue responses if hook is busy or we are waiting for
-                    # a response to a request
-                    # if self.hook_busy or request:
                     log.logger.debug('Adding to queue: ' + response)
                     self.response_queue.append(response)
-                    # else:
-                        # self.response_hook(response)
-
         return(None)

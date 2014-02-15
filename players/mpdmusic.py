@@ -39,11 +39,11 @@ class MpdMusic(Player):
             if 'file' in item:
                 # Ignore files in sub directories
                 if '/' not in item['file']:
-                    menu[item['file']] = 'action'
+                    menu[item['file']] = ('action', None)
             elif 'directory' in item:
                 # Ignore sub directories
                 if '/' not in item['directory']:
-                    menu[item['directory']] = 'menu'
+                    menu[item['directory']] = ('menu', None)
         return(menu)
 
     def add_item(self, uri):

@@ -5,6 +5,7 @@
 '''
 import log
 
+
 class Menu(object):
     '''
     All menu stuff
@@ -12,9 +13,11 @@ class Menu(object):
     lcd = None
     '''Connection to LCDd'''
     dynamic_menu = dict()
-    '''List of items in the current dynamic menu'''
+    '''Dictionary of items in the current dynamic menu'''
     dynamic_menu_name = ''
     '''Name of the current dynamic menu'''
+    last_menu_name = '""'
+    '''Name of the previous menu'''
     def __init__(self, lcd, players):
         '''
         Constructor
@@ -44,21 +47,28 @@ class Menu(object):
         Generate a list menu, meant for listing files or playlists.
         '''
         log.logger.debug('Generating list menu: ' + menu)
+        # Delete old back button
+        if not self.dynamic_menu_name == '':
+            self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
+                             + '" dback')
+        # Create the menu
         self.dynamic_menu_name = menu
         self.dynamic_menu = items
         for item in items.items():
-            if 'action' in item:
-                # Create the an item that closes the meu when selected
+            if 'action' in item[1][0]:
+                # Create the an item that closes the menu when selected
                 self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
                              + '" action "' + item[0] + '"')
                 self.lcd.request('menu_set_item', '"' + menu + '" "' + item[0]
                                  + '" -next _quit_')
-            elif 'menu' in item:
+            elif 'menu' in item[1][0]:
                 # Create the an item that closes the meu when selected
                 self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
                              + '" menu "' + item[0] + '"')
         self.lcd.request('menu_add_item', '"' + menu
                          + '" dback action "< Back"')
+        self.lcd.request('menu_set_item', '"' + menu
+                         + '" dback -next "' + self.last_menu_name + '"')
 
     def delete_selection_list(self, menu=''):
         '''
@@ -73,3 +83,15 @@ class Menu(object):
                                  + '" "' + item + '"')
             self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
                              + '" dback')
+
+    def enter(self, menu, items):
+        '''
+        A sub menu has been selected.
+        '''
+        self.generate_selection_list(menu, items)
+
+    def leave(self, menu):
+        '''
+        A sub menu has been left.
+        '''
+        self.last_menu_name = menu

@@ -125,22 +125,22 @@ class RadioPi(object):
         if self.current_event in self.players.players.keys():
             # Save the player
             self.current_player = self.players.players[self.current_event]
-            self.ui.menu.generate_selection_list(self.current_event,
-                                                 self.current_player.get_items('/'))
+            self.ui.menu.enter(self.current_event,
+                               self.current_player.get_items('/'))
 
     def leave_menu(self):
         '''
         Run when the lcd says a menu has been left.
         '''
         # Clear the menu if it needs to
-        self.ui.menu.delete_selection_list(self.current_event)
+        self.ui.menu.leave(self.current_event)
 
     def play(self):
         '''
         Play something if its the right thing to do.
         '''
         # Add to playlist
-        self.current_player.add_item(event)
+        self.current_player.add_item(self.current_event)
         # Start playing if stopped
         if not self.current_player.playing:
             self.current_player.play()
@@ -171,7 +171,9 @@ class RadioPi(object):
             # Something has been selected
             if 'select' in event:
                 self.current_event = event.replace('select ', '')
-                self.state_machine.queue_state('play')
+                # Ignore back button
+                if not 'back' in self.current_event:
+                    self.state_machine.queue_state('play')
             # The menu has been left
             if 'leave' in event:
                 self.current_event = event.replace('leave ', '')

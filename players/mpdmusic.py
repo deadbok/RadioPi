@@ -5,6 +5,7 @@ Created on 10/02/2014
 '''
 import log
 from players.player import Player
+from ui.menuitem import MenuItem
 
 
 class MpdMusic(Player):
@@ -34,16 +35,17 @@ class MpdMusic(Player):
 
     def get_items(self, uri):
         items = self.mpd.listall()
-        menu = dict()
+        menu = list()
         for item in items:
             if 'file' in item:
                 # Ignore files in sub directories
                 if '/' not in item['file']:
-                    menu[item['file']] = ('action', None)
+                    menu.append(MenuItem(item['file'], item['file']))
             elif 'directory' in item:
                 # Ignore sub directories
                 if '/' not in item['directory']:
-                    menu[item['directory']] = ('menu', None)
+                    menu.append(MenuItem(item['directory'], item['directory'],
+                                         True))
         return(menu)
 
     def add_item(self, uri):
@@ -71,3 +73,15 @@ class MpdMusic(Player):
             return(song[0]['title'])
         else:
             return('')
+
+    def menu_items(self):
+        '''
+        Generate menu items for control of the player.
+        '''
+        items = list()
+        items.append(MenuItem('Play/Pause'))
+        items.append(MenuItem('Next'))
+        items.append(MenuItem('Prev'))
+        items.append(MenuItem('Clear'))
+
+        return(items)

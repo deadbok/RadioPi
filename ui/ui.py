@@ -10,6 +10,7 @@ from lcdproc.client import Client
 import sys
 from ui.status import Status
 from ui.menu import Menu
+from ui.menuitem import MenuItem
 
 
 class UI(object):
@@ -52,6 +53,7 @@ class UI(object):
             sys.exit(1)
         # Initialise UI components
         self.status = Status(self.lcd)
+        self.menu = Menu(self.lcd)
 
     def generate_root_menu(self, players):
         '''
@@ -61,7 +63,17 @@ class UI(object):
         @type players: dict
         '''
         log.logger.debug("Generating root menu")
-        self.menu = Menu(self.lcd, players)
+        items = list()
+        # Root menu player entries
+        for name in players.keys():
+            items.append(MenuItem('', name, True, name))
+        # Root Settings menu
+        items.append(MenuItem('', 'Settings', True, 'Settings'))
+
+        if len(self.menu.menu) > 0:
+            self.menu.delete_menu()
+        self.menu.generate_menu('', items)
+        self.menu.set_root_menu('')
 
     def set_event_hook(self, hook):
         '''
@@ -91,3 +103,9 @@ class UI(object):
         '''
         self.status.lines[2] = title
         self.status.update()
+
+    def get_value_from_id(self, id):
+        '''
+        Get the value of a menu item from the id.
+        '''
+        return(self.menu.menu[id])

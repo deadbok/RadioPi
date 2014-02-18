@@ -26,7 +26,7 @@ class Player(object):
 
     def get_items(self, uri):
         '''
-        Return a list of all playable items.
+        Return a list of all playable items, wrapped in MenuItems.
         '''
         raise NotImplementedError('Must be implemented in a derived class')
 
@@ -51,5 +51,11 @@ class Player(object):
     def get_playing(self):
         '''
         Get the currently playing song.
+        '''
+        raise NotImplementedError('Must be implemented in a derived class')
+
+    def menu_items(self):
+        '''
+        Generate menu items for control of the player.
         '''
         raise NotImplementedError('Must be implemented in a derived class')

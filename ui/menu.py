@@ -4,6 +4,8 @@
 @author: oblivion
 '''
 import log
+from uuid import uuid4
+from ui.menuitem import MenuItem
 
 
 class Menu(object):
@@ -12,13 +14,15 @@ class Menu(object):
     '''
     lcd = None
     '''Connection to LCDd'''
-    dynamic_menu = dict()
-    '''Dictionary of items in the current dynamic menu'''
+    menu = dict()
+    '''Dictionary of items in the menu'''
     dynamic_menu_name = ''
     '''Name of the current dynamic menu'''
     last_menu_name = '""'
     '''Name of the previous menu'''
-    def __init__(self, lcd, players):
+    menu_path = '/'
+    '''The current items that has been selected to get at the current menu.'''
+    def __init__(self, lcd):
         '''
         Constructor
 
@@ -29,69 +33,83 @@ class Menu(object):
         '''
         log.logger.debug("Initialising menus")
         self.lcd = lcd
-        # Root menu player entries
-        for name in players.keys():
-            self.lcd.request('menu_add_item', '"" ' + name + ' menu "' + name
-                             + '"')
-        # Root Settings menu
-        self.lcd.request('menu_add_item', '"" Settings menu "Settings"')
-        # Get out of the menu
-        self.lcd.request('menu_add_item', '"" back action "< Back"')
-        self.lcd.request('menu_set_item', '"" back -next _quit_')
 
-        # There can be only one. Only display our menu
-        self.lcd.request('menu_set_main', '""')
-
-    def generate_selection_list(self, menu, items):
+    def set_root_menu(self, menu):
         '''
-        Generate a list menu, meant for listing files or playlists.
+        There can be only one. Only display our menu.
         '''
-        log.logger.debug('Generating list menu: ' + menu)
-        # Delete old back button
-        if not self.dynamic_menu_name == '':
-            self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
-                             + '" dback')
-        # Create the menu
-        self.dynamic_menu_name = menu
-        self.dynamic_menu = items
-        for item in items.items():
-            if 'action' in item[1][0]:
-                # Create the an item that closes the menu when selected
-                self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
-                             + '" action "' + item[0] + '"')
-                self.lcd.request('menu_set_item', '"' + menu + '" "' + item[0]
-                                 + '" -next _quit_')
-            elif 'menu' in item[1][0]:
-                # Create the an item that closes the meu when selected
-                self.lcd.request('menu_add_item', '"' + menu + '" "' + item[0]
-                             + '" menu "' + item[0] + '"')
-        self.lcd.request('menu_add_item', '"' + menu
-                         + '" dback action "< Back"')
-        self.lcd.request('menu_set_item', '"' + menu
-                         + '" dback -next "' + self.last_menu_name + '"')
-
-    def delete_selection_list(self, menu=''):
-        '''
-        Delete a list menu.
-        '''
-        # Clear the menu if it's the right one.
-        # If '' an empty string is given the menu is cleared
-        if (menu == self.dynamic_menu_name) or (menu == ''):
-            log.logger.debug('Deleting list menu: ' + menu)
-            for item in self.dynamic_menu:
-                self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
-                                 + '" "' + item + '"')
-            self.lcd.request('menu_del_item', '"' + self.dynamic_menu_name
-                             + '" dback')
+        self.lcd.request('menu_set_main', '"' + menu + '"')
 
     def enter(self, menu, items):
         '''
-        A sub menu has been selected.
+        A menu has been selected.
         '''
-        self.generate_selection_list(menu, items)
+        self.generate_menu(menu, items)
 
     def leave(self, menu):
         '''
-        A sub menu has been left.
+        A menu has been left.
         '''
         self.last_menu_name = menu
+
+    def generate_back_item(self, menu):
+        '''
+        Generate a back navigation item.
+        '''
+        # Delete old back button
+        if 'dback' in self.menu:
+            self.lcd.request('menu_del_item', '"' + menu
+                                 + '" "dback"')
+        item = MenuItem('dback', '< Back', False, 'dback')
+        # Set root
+        item.root = menu
+        self.menu[item.id] = item
+        self.lcd.request('menu_add_item', '"' + menu + '" "' + str(item.id)
+                             + '" action "' + item.text + '"')
+#         self.lcd.request('menu_set_item', '"' + path
+#                          + '" dback -next "' + self.last_menu_name + '"')
+
+    def generate_menu(self, path, items):
+        '''
+        Generate a menu.
+        '''
+
+        log.logger.debug('Generating list menu: ' + path)
+        # Check if its there already
+#         if path in self.menu.keys():
+#             log.logger.debug('Menu has already been generated')
+#             return()
+
+        # Create the menu
+        for item in items:
+            log.logger.debug('Menu item: ' + str(item.id))
+            log.logger.debug('Menu item text: ' + item.text)
+            # Set root
+            item.root = path
+            # Save the entry
+            self.menu[item.id] = item
+            if not item.submenu:
+                # Create an item that closes the menu when selected
+                self.lcd.request('menu_add_item', '"' + path + '" "' + str(item.id)
+                             + '" action "' + item.text + '"')
+                self.lcd.request('menu_set_item', '"' + path + '" "' + str(item.id)
+                                 + '" -next _quit_')
+            else:
+                # Create the an item that closes the menu when selected
+                self.lcd.request('menu_add_item', '"' + path + '" "' + str(item.id)
+                             + '" menu "' + item.text + '"')
+        self.generate_back_item(path)
+
+    def delete_menu(self):
+        '''
+        Delete a menu.
+        '''
+        log.logger.debug('Deleting menu')
+        # Move the back button to the root menu
+        if not self.menu['dback'].root == '':
+            self.generate_back_item()
+        for item in self.menu.values():
+            # Don't delete the back button
+            if not item.value == 'dback':
+                self.lcd.request('menu_del_item', '"' + item.root
+                                 + '" "' + str(item.id) + '"')

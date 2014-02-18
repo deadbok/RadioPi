@@ -121,6 +121,9 @@ class RadioPi(object):
         '''
         Run when the lcd says a menu has been entered.
         '''
+        # Root menu
+        if self.current_event == '""' or self.current_event == '_client_menu_':
+            self.ui.generate_root_menu(self.players.players)
         # Check if it is one of the player menus
         if self.current_event in self.players.players.keys():
             # Save the player

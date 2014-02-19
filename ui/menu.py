@@ -4,7 +4,7 @@
 @author: oblivion
 '''
 import log
-from uuid import uuid4
+from collections import OrderedDict
 from ui.menuitem import MenuItem
 
 
@@ -14,7 +14,7 @@ class Menu(object):
     '''
     lcd = None
     '''Connection to LCDd'''
-    menu = dict()
+    menu = OrderedDict()
     '''Dictionary of items in the menu'''
     dynamic_menu_name = ''
     '''Name of the current dynamic menu'''
@@ -40,22 +40,11 @@ class Menu(object):
         '''
         self.lcd.request('menu_set_main', '"' + menu + '"')
 
-    def enter(self, menu, items):
-        '''
-        A menu has been selected.
-        '''
-        self.generate_menu(menu, items)
-
-    def leave(self, menu):
-        '''
-        A menu has been left.
-        '''
-        self.last_menu_name = menu
-
-    def generate_back_item(self, menu):
+    def generate_back_item(self, menu=''):
         '''
         Generate a back navigation item.
         '''
+        log.logger.debug('Auto generating back button')
         # Delete old back button
         if 'dback' in self.menu:
             self.lcd.request('menu_del_item', '"' + menu
@@ -64,52 +53,66 @@ class Menu(object):
         # Set root
         item.root = menu
         self.menu[item.id] = item
-        self.lcd.request('menu_add_item', '"' + menu + '" "' + str(item.id)
+        self.lcd.request('menu_add_item', '"' + menu + '" "' + item.id
                              + '" action "' + item.text + '"')
 #         self.lcd.request('menu_set_item', '"' + path
 #                          + '" dback -next "' + self.last_menu_name + '"')
+        return(item)
 
-    def generate_menu(self, path, items):
+    def generate_menu(self, root, items):
         '''
         Generate a menu.
+
+        @param root: The menu item that the menu belongs to.
+        @param items: A list of items the create in the menu.
         '''
-
-        log.logger.debug('Generating list menu: ' + path)
-        # Check if its there already
-#         if path in self.menu.keys():
-#             log.logger.debug('Menu has already been generated')
-#             return()
-
+        log.logger.debug('Generating menu')
         # Create the menu
         for item in items:
-            log.logger.debug('Menu item: ' + str(item.id))
+            log.logger.debug('Menu item: ' + item.id)
             log.logger.debug('Menu item text: ' + item.text)
-            # Set root
-            item.root = path
-            # Save the entry
-            self.menu[item.id] = item
-            if not item.submenu:
-                # Create an item that closes the menu when selected
-                self.lcd.request('menu_add_item', '"' + path + '" "' + str(item.id)
-                             + '" action "' + item.text + '"')
-                self.lcd.request('menu_set_item', '"' + path + '" "' + str(item.id)
-                                 + '" -next _quit_')
+            # Check if its there already
+            if not item.id in self.menu.keys():
+                # Set root
+                # item.root = root
+                # Save the entry
+                self.menu[item.id] = item
+                if not item.submenu:
+                    # Create an item that closes the menu when selected
+                    self.lcd.request('menu_add_item', '"' + root + '" "'
+                                     + item.id + '" action "' + item.text
+                                     + '"')
+                    self.lcd.request('menu_set_item', '"' + root + '" "'
+                                     + item.id + '" -next _quit_')
+                else:
+                    # Create a menu with sub items
+                    self.lcd.request('menu_add_item', '"' + root + '" "'
+                                     + item.id + '" menu "' + item.text + '"')
             else:
-                # Create the an item that closes the menu when selected
-                self.lcd.request('menu_add_item', '"' + path + '" "' + str(item.id)
-                             + '" menu "' + item.text + '"')
-        self.generate_back_item(path)
+                log.logger.debug('Menu item has already been generated')
+        # Create back button
+        self.generate_back_item(root)
 
     def delete_menu(self):
         '''
         Delete a menu.
         '''
         log.logger.debug('Deleting menu')
-        # Move the back button to the root menu
-        if not self.menu['dback'].root == '':
-            self.generate_back_item()
-        for item in self.menu.values():
-            # Don't delete the back button
-            if not item.value == 'dback':
+        # Delete back button first to save us some trouble.
+        # LCDd expect submenus to be deleted before menus. I haven't looked into
+        # What happens other than you can't delete a menu item, when the menu
+        # has been deleted. That is why I use an OrderedDict. The dynamic back
+        # button is changed with every menu change, and can't be expected to be
+        # at the right place in the dict
+        if 'dback' in self.menu:
+            item = self.menu['dback']
+            self.lcd.request('menu_del_item', '"' + item.root + '" "dback"')
+            del self.menu['dback']
+        while len(self.menu) > 0:
+            _, item = self.menu.popitem(True)
+            # LCDd removes a menu when it is empty, so skip them
+            if not item.submenu:
+                log.logger.debug('Menu     item: ' + item.id)
+                log.logger.debug('Menu item text: ' + item.text)
                 self.lcd.request('menu_del_item', '"' + item.root
-                                 + '" "' + str(item.id) + '"')
+                                     + '" "' + item.id + '"')

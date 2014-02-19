@@ -4,6 +4,7 @@ Created on 10/02/2014
 @author: oblivion
 '''
 import log
+from os.path import basename, relpath
 from players.player import Player
 from ui.menuitem import MenuItem
 
@@ -33,19 +34,26 @@ class MpdMusic(Player):
         # Clear the playlist
         self.mpd.clear()
 
-    def get_items(self, uri):
-        items = self.mpd.listall()
+    def get_items(self, uri, root):
+        '''
+        Return all items in uri in a list og MenuItems.
+        '''
+        items = self.mpd.lsinfo(uri)
         menu = list()
         for item in items:
             if 'file' in item:
-                # Ignore files in sub directories
-                if '/' not in item['file']:
-                    menu.append(MenuItem(item['file'], item['file']))
+                value = (uri, item['file'])
+                menu_item = MenuItem(value, basename(item['file']))
+                menu_item.root = root
+                menu_item.create_id()
+                menu.append(menu_item)
             elif 'directory' in item:
-                # Ignore sub directories
-                if '/' not in item['directory']:
-                    menu.append(MenuItem(item['directory'], item['directory'],
-                                         True))
+                value = (item['directory'], '')
+                menu_item = MenuItem(value, relpath(item['directory'], uri),
+                                     True)
+                menu_item.root = root
+                menu_item.create_id()
+                menu.append(menu_item)
         return(menu)
 
     def add_item(self, uri):

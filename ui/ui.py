@@ -10,7 +10,6 @@ from lcdproc.client import Client
 import sys
 from ui.status import Status
 from ui.menu import Menu
-from ui.menuitem import MenuItem
 
 
 class UI(object):
@@ -62,17 +61,19 @@ class UI(object):
         @param players: Dictionary of players and menu names
         @type players: dict
         '''
+        # The root menu is not saved in the internal dict, and therefore it is
+        # never deleted
         log.logger.debug("Generating root menu")
-        items = list()
         # Root menu player entries
         for name in players.keys():
-            items.append(MenuItem('', name, True, name))
+            self.lcd.request('menu_add_item', '"" "' + name + '" menu "'
+                             + name + '"')
         # Root Settings menu
-        items.append(MenuItem('', 'Settings', True, 'Settings'))
-
-        if len(self.menu.menu) > 0:
-            self.menu.delete_menu()
-        self.menu.generate_menu('', items)
+        self.lcd.request('menu_add_item', '"" "Settings" menu "Settings"')
+        # Back
+        self.lcd.request('menu_add_item', '"" "back" action "< Back"')
+        self.lcd.request('menu_set_item', '"" back -menu_result quit')
+        # Set as root menu
         self.menu.set_root_menu('')
 
     def set_event_hook(self, hook):
@@ -108,4 +109,16 @@ class UI(object):
         '''
         Get the value of a menu item from the id.
         '''
-        return(self.menu.menu[id])
+        return(self.menu.menu[id.strip()].value)
+
+    def enter_menu(self, root, items):
+        '''
+        A menu has been selected.
+        '''
+        self.menu.generate_menu(root, items)
+
+    def leave_menu(self, menu):
+        '''
+        A menu has been left.
+        '''
+        self.last_menu_name = menu

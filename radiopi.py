@@ -123,31 +123,38 @@ class RadioPi(object):
         '''
         # Root menu
         if self.current_event == '""' or self.current_event == '_client_menu_':
-            self.ui.generate_root_menu(self.players.players)
+            return()
         # Check if it is one of the player menus
         if self.current_event in self.players.players.keys():
             # Save the player
             self.current_player = self.players.players[self.current_event]
-            self.ui.menu.enter(self.current_event,
-                               self.current_player.get_items('/'))
+            self.ui.enter_menu(self.current_event,
+                               self.current_player.get_items('', self.current_event))
+            return()
+        # If none of the above, we are dealing with an item specific to the
+        # current player.
+        value = self.ui.get_value_from_id(self.current_event)
+        self.ui.enter_menu(self.current_event,
+                               self.current_player.get_items(value[0], self.current_event))
 
     def leave_menu(self):
         '''
         Run when the lcd says a menu has been left.
         '''
-        # Clear the menu if it needs to
-        self.ui.menu.leave(self.current_event)
+#         if self.current_event == '_client_menu_':
+#             self.ui.menu.delete_menu()
 
     def play(self):
         '''
         Play something if its the right thing to do.
         '''
+        value = self.ui.get_value_from_id(self.current_event)
+        file = value[1]
         # Add to playlist
-        self.current_player.add_item(self.current_event)
+        self.current_player.add_item(file)
         # Start playing if stopped
         if not self.current_player.playing:
             self.current_player.play()
-            self.status_update()
 
     def main_loop(self):
         # Initial paint of the status screen

@@ -1,7 +1,5 @@
 '''
-Created on 10/02/2014
-
-@author: oblivion
+This is the "Music" player, it uses MPD to play music from the filesystem.
 '''
 import log
 from os.path import basename, relpath

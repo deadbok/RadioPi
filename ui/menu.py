@@ -1,7 +1,7 @@
 '''
-
-@since 11/02/2014
-@author: oblivion
+This deals with menu functions. It keeps an internal representation of the
+menu, as well as the one send to LCDd. The menus a generated on the fly, when
+first accessed.
 '''
 import log
 from collections import OrderedDict

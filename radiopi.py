@@ -1,9 +1,6 @@
 '''
 Main file for RadioPi, an interface between various programs and an LCD, to
-function as a sort of portable radio/media player.
-
-@since 09/02/2014
-@author: oblivion
+function as a sort of transistor radio/media player.
 '''
 import optparse
 import log
@@ -14,6 +11,7 @@ from time import sleep
 from sm import StateMachine
 
 VERSION = '0.1'
+'''The current version.'''
 
 
 class RadioPi(object):
@@ -21,11 +19,12 @@ class RadioPi(object):
     Main class for RadioPi
     '''
     players = None
-    '''All players.'''
+    '''An dictionary of all players. These are presented at the top level menu by
+    their key.'''
     ui = None
     '''All UI stuff.'''
     current_player = None
-    '''Current player.'''
+    '''The current player.'''
     loops = 0
     '''Counter to tell how many times we've been in the main loop.'''
     state_machine = None
@@ -34,7 +33,8 @@ class RadioPi(object):
     '''The current event that we are handling.'''
     def __init__(self):
         '''
-        Constructor.
+        Constructor. Handles command line parsing, and initialisation of
+        everything.
         '''
         # Parse command line
         usage = "usage: %prog [options] lcd_host[:port] mpd_host[:port]"
@@ -102,9 +102,11 @@ class RadioPi(object):
 
     def default_update(self):
         '''
-        Default update state to run when there's nothing much to do.
+        Default state to run when there's nothing much to do. Updates the
+        status screen and polls LCDd for messages.
         '''
         # Do not update display every time
+        # Would be better with another solution, like a separate thread
         if self.loops == 1000000:
             self.loops = 0
             title = ''
@@ -119,7 +121,7 @@ class RadioPi(object):
 
     def enter_menu(self):
         '''
-        Run when the lcd says a menu has been entered.
+        Run by the state machine when the lcd says a menu has been entered.
         '''
         # Root menu
         if self.current_event == '""' or self.current_event == '_client_menu_':
@@ -128,25 +130,25 @@ class RadioPi(object):
         if self.current_event in self.players.players.keys():
             # Save the player
             self.current_player = self.players.players[self.current_event]
-            self.ui.enter_menu(self.current_event,
-                               self.current_player.get_items('', self.current_event))
+            items = self.current_player.get_items('', self.current_event)
+            self.ui.enter_menu(self.current_event, items)
             return()
         # If none of the above, we are dealing with an item specific to the
         # current player.
         value = self.ui.get_value_from_id(self.current_event)
-        self.ui.enter_menu(self.current_event,
-                               self.current_player.get_items(value[0], self.current_event))
+        items = self.current_player.get_items(value[0], self.current_event)
+        self.ui.enter_menu(self.current_event, items)
 
     def leave_menu(self):
         '''
-        Run when the lcd says a menu has been left.
+        Run by the state machine when the lcd says a menu has been left.
         '''
-#         if self.current_event == '_client_menu_':
-#             self.ui.menu.delete_menu()
+        pass
 
     def play(self):
         '''
-        Play something if its the right thing to do.
+        Play something if its the right thing to do. Called by the state
+        machine.
         '''
         value = self.ui.get_value_from_id(self.current_event)
         file = value[1]
@@ -157,6 +159,9 @@ class RadioPi(object):
             self.current_player.play()
 
     def main_loop(self):
+        '''
+        This is the main loop where the state machine is started.
+        '''
         # Initial paint of the status screen
         self.ui.status.update()
         while(1):
@@ -165,6 +170,9 @@ class RadioPi(object):
     def event_hook(self, event):
         '''
         Handle events from the UI.
+
+        @param event: The message from from LCDd.
+        @type event: String.
         '''
         # Tell that we are busy
         self.ui.enter_hook()
@@ -193,6 +201,9 @@ class RadioPi(object):
 
 
 def main():
+    '''
+    The entry point.
+    '''
     radiopi = RadioPi()
     radiopi.main_loop()
 

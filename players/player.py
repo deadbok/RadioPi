@@ -24,7 +24,7 @@ class Player(object):
         '''
         self.name = name
 
-    def get_items(self, uri):
+    def get_items(self, uri, root):
         '''
         Return a list of all playable items, wrapped in MenuItems.
         '''

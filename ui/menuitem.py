@@ -37,5 +37,5 @@ class MenuItem(object):
         '''
         Create a unique id.
         '''
-        self.id = str(hash(self))
+        self.id = str(hash(self.text + self.root))
         return(self.id)

@@ -55,8 +55,8 @@ class Menu(object):
         self.menu[item.id] = item
         self.lcd.request('menu_add_item', '"' + menu + '" "' + item.id
                              + '" action "' + item.text + '"')
-#         self.lcd.request('menu_set_item', '"' + path
-#                          + '" dback -next "' + self.last_menu_name + '"')
+        self.lcd.request('menu_set_item', '"' + menu
+                         + '" dback -menu_result close')
         return(item)
 
     def generate_menu(self, root, items):

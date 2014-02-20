@@ -45,6 +45,7 @@ class MpdMusic(Player):
                 value = (uri, item['file'])
                 menu_item = MenuItem(value, basename(item['file']))
                 menu_item.root = root
+                # Hash the ID after the root has been added
                 menu_item.create_id()
                 menu.append(menu_item)
             elif 'directory' in item:
@@ -52,6 +53,7 @@ class MpdMusic(Player):
                 menu_item = MenuItem(value, relpath(item['directory'], uri),
                                      True)
                 menu_item.root = root
+                # Hash the ID after the root has been added
                 menu_item.create_id()
                 menu.append(menu_item)
         return(menu)

@@ -2,7 +2,9 @@
 This is the "Music" player, it uses MPD to play music from the filesystem.
 '''
 import log
+import locale
 from os.path import basename, relpath
+from functools import cmp_to_key
 from players.player import Player
 from ui.menuitem import MenuItem
 
@@ -15,11 +17,18 @@ class ItemValue(object):
     '''The directory of the item.'''
     filename = ''
     '''The filename of the item.'''
+    artist = ''
+    '''The artist of the item.'''
+    album = ''
+    '''The album of the item.'''
     browsetype = 'Files'
     '''The way to browse this item. Artists, Albums or Files.'''
-    def __init__(self, directory='', filename='', browsetype='Files'):
+    def __init__(self, directory='', filename='', artist='', album='',
+                 browsetype='Files'):
         self.directory = directory
         self.filename = filename
+        self.artist = artist
+        self.album = album
         self.browsetype = browsetype
 
 
@@ -71,6 +80,49 @@ class MpdMusic(Player):
                 menu.append(menu_item)
         return(menu)
 
+    def get_by_artist(self, value, root):
+        '''
+        Create a list of at first level artists, then albums by artists, then
+        songs.
+        '''
+        # Start by finding all artists
+        if value.artist == '':
+            items = self.mpd.list('artist')
+            menu = list()
+            # Sort them before running through them
+            for item in sorted(items, key=cmp_to_key(locale.strcoll)):
+                item = item.replace('Artist: ', '')
+                if not item == '':
+                    item_value = ItemValue(artist=item,
+                                           browsetype='Artists')
+                    menu_item = MenuItem(item_value, item, True)
+                    menu_item.root = root
+                    # Hash the ID after the root has been added
+                    menu_item.create_id()
+                    menu.append(menu_item)
+            return(menu)
+        # An artist has been selected
+        else:
+            # No album has been selected
+            if value.album == '':
+                items = self.mpd.search('artist', value.artist)
+                albums = set()
+                # Isolate albums
+                for item in items:
+                    albums.add(item['album'])
+                menu = list()
+                for album in albums:
+                    if not album == '':
+                        item_value = ItemValue(artist=item, album=album,
+                                               browsetype='Artists')
+                        menu_item = MenuItem(item_value, album, True)
+                        menu_item.root = root
+                        # Hash the ID after the root has been added
+                        menu_item.create_id()
+                        menu.append(menu_item)
+                return(menu)
+
+
     def get_items(self, value, root):
         '''
         Return all items in value in a list og MenuItems. The first position in
@@ -105,6 +157,9 @@ class MpdMusic(Player):
             # File browser
             if value.browsetype == 'Files':
                 menu = self.get_files(value, root)
+            # Artists browser
+            if value.browsetype == 'Artists':
+                menu = self.get_by_artist(value, root)
         return(menu)
 
     def add_item(self, value):

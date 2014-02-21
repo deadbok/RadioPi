@@ -136,7 +136,7 @@ class RadioPi(object):
         # If none of the above, we are dealing with an item specific to the
         # current player.
         value = self.ui.get_value_from_id(self.current_event)
-        items = self.current_player.get_items(value[0], self.current_event)
+        items = self.current_player.get_items(value, self.current_event)
         self.ui.enter_menu(self.current_event, items)
 
     def leave_menu(self):
@@ -151,9 +151,8 @@ class RadioPi(object):
         machine.
         '''
         value = self.ui.get_value_from_id(self.current_event)
-        file = value[1]
         # Add to playlist
-        self.current_player.add_item(file)
+        self.current_player.add_item(value)
         # Start playing if stopped
         if not self.current_player.playing:
             self.current_player.play()

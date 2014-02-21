@@ -7,6 +7,22 @@ from players.player import Player
 from ui.menuitem import MenuItem
 
 
+class ItemValue(object):
+    '''
+    Container for the values needed to keep track items.
+    '''
+    directory = ''
+    '''The directory of the item.'''
+    filename = ''
+    '''The filename of the item.'''
+    browsetype = 'Files'
+    '''The way to browse this item. Artists, Albums or Files.'''
+    def __init__(self, directory='', filename='', browsetype='Files'):
+        self.directory = directory
+        self.filename = filename
+        self.browsetype = browsetype
+
+
 class MpdMusic(Player):
     '''
     Class to use mpd to play music files.
@@ -16,10 +32,7 @@ class MpdMusic(Player):
 
     def __init__(self, mpd):
         '''
-        Constructor
-
-        @param mpd: MPD Python client.
-        @type mpd: mpd.MPDClient
+        Constructor.
         '''
         log.logger.debug("Creating mpd music player")
         Player.__init__(self, "Music")
@@ -32,23 +45,25 @@ class MpdMusic(Player):
         # Clear the playlist
         self.mpd.clear()
 
-    def get_items(self, uri, root):
+    def get_files(self, value, root):
         '''
-        Return all items in uri in a list og MenuItems.
+        Create a list of files and dirctories in the current value, wrapped in
+        MenuItem classes.
         '''
-        items = self.mpd.lsinfo(uri)
+        items = self.mpd.lsinfo(value.directory)
         menu = list()
         for item in items:
             if 'file' in item:
-                value = (uri, item['file'])
-                menu_item = MenuItem(value, basename(item['file']))
+                item_value = ItemValue(value.directory, item['file'], 'Files')
+                menu_item = MenuItem(item_value, basename(item['file']))
                 menu_item.root = root
                 # Hash the ID after the root has been added
                 menu_item.create_id()
                 menu.append(menu_item)
             elif 'directory' in item:
-                value = (item['directory'], '')
-                menu_item = MenuItem(value, relpath(item['directory'], uri),
+                item_value = ItemValue(item['directory'], '', 'Files')
+                menu_item = MenuItem(item_value,
+                                     relpath(item['directory'], value.directory),
                                      True)
                 menu_item.root = root
                 # Hash the ID after the root has been added
@@ -56,12 +71,48 @@ class MpdMusic(Player):
                 menu.append(menu_item)
         return(menu)
 
-    def add_item(self, uri):
+    def get_items(self, value, root):
+        '''
+        Return all items in value in a list og MenuItems. The first position in
+        the value can be either Albums, Artists, or Files, and generates a list
+        of the given type.
+        '''
+        menu = list()
+        # Empty is a special case
+        if value == '':
+            menu = list()
+            # Albums
+            menu_item = MenuItem(ItemValue(browsetype='Albums'), 'Albums',
+                                 True)
+            menu_item.root = root
+            # Hash the ID after the root has been added
+            menu_item.create_id()
+            menu.append(menu_item)
+            # Artists
+            menu_item = MenuItem(ItemValue(browsetype='Artists'), 'Artists',
+                                 True)
+            menu_item.root = root
+            # Hash the ID after the root has been added
+            menu_item.create_id()
+            menu.append(menu_item)
+            # Files
+            menu_item = MenuItem(ItemValue(browsetype='Files'), 'Files', True)
+            menu_item.root = root
+            # Hash the ID after the root has been added
+            menu_item.create_id()
+            menu.append(menu_item)
+        if isinstance(value, ItemValue):
+            # File browser
+            if value.browsetype == 'Files':
+                menu = self.get_files(value, root)
+        return(menu)
+
+    def add_item(self, value):
         '''
         Add an item to the playlist.
         '''
-        log.logger.debug("Adding: " + uri)
-        self.mpd.add(uri)
+        log.logger.debug("Adding: " + value.filename)
+        self.mpd.add(value.filename)
 
     def play(self):
         '''

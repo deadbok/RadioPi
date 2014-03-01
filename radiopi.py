@@ -203,8 +203,11 @@ def main():
     '''
     The entry point.
     '''
-    radiopi = RadioPi()
-    radiopi.main_loop()
+    try:
+        radiopi = RadioPi()
+        radiopi.main_loop()
+    finally:
+        radiopi.ui.close()
 
 if __name__ == '__main__':
     main()

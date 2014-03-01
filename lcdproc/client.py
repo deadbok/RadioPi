@@ -137,3 +137,7 @@ class Client(object):
                     log.logger.debug('Adding to queue: ' + response)
                     self.response_queue.append(response)
         return(None)
+
+    def close(self):
+        '''Close the connection.'''
+        self.server.close()

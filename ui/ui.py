@@ -122,3 +122,7 @@ class UI(object):
         A menu has been left.
         '''
         self.last_menu_name = menu
+
+    def close(self):
+        '''Close the connection to LCDd.'''
+        self.lcd.close()

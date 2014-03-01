@@ -59,6 +59,7 @@ class MpdMusic(Player):
         Create a list of files and dirctories in the current value, wrapped in
         MenuItem classes.
         '''
+        log.logger.debug('Selecting by filename.')
         items = self.mpd.lsinfo(value.directory)
         menu = list()
         for item in items:
@@ -72,7 +73,8 @@ class MpdMusic(Player):
             elif 'directory' in item:
                 item_value = ItemValue(item['directory'], '', 'Files')
                 menu_item = MenuItem(item_value,
-                                     relpath(item['directory'], value.directory),
+                                     relpath(item['directory'],
+                                             value.directory),
                                      True)
                 menu_item.root = root
                 # Hash the ID after the root has been added
@@ -85,8 +87,10 @@ class MpdMusic(Player):
         Create a list of at first level artists, then albums by artists, then
         songs.
         '''
+        log.logger.debug('Selecting by artist')
         # Start by finding all artists
         if value.artist == '':
+            log.logger.debug('Artist selection')
             items = self.mpd.list('artist')
             menu = list()
             # Sort them before running through them
@@ -105,6 +109,7 @@ class MpdMusic(Player):
         else:
             # No album has been selected
             if value.album == '':
+                log.logger.debug('Artist selection. Album: ' + value.artist)
                 items = self.mpd.search('artist', value.artist)
                 albums = set()
                 # Isolate albums
@@ -113,7 +118,8 @@ class MpdMusic(Player):
                 menu = list()
                 for album in albums:
                     if not album == '':
-                        item_value = ItemValue(artist=item, album=album,
+                        item_value = ItemValue(artist=value.artist,
+                                               album=album,
                                                browsetype='Artists')
                         menu_item = MenuItem(item_value, album, True)
                         menu_item.root = root
@@ -121,7 +127,25 @@ class MpdMusic(Player):
                         menu_item.create_id()
                         menu.append(menu_item)
                 return(menu)
-
+            # An album has been selected this is the final menu
+            else:
+                log.logger.debug('Track selection. Artist: ' + value.artist
+                                 + '. Album: ' + value.album)
+                items = self.mpd.search('artist', value.artist)
+                menu = list()
+                for item in items:
+                    # Only include the right tracks
+                    if item['album'] == value.album:
+                        item_value = ItemValue(filename=item['file'],
+                                               artist=value.artist,
+                                               album=value.album,
+                                               browsetype='Artists')
+                        menu_item = MenuItem(item_value, item['title'])
+                        menu_item.root = root
+                        # Hash the ID after the root has been added
+                        menu_item.create_id()
+                        menu.append(menu_item)
+                return(menu)
 
     def get_items(self, value, root):
         '''

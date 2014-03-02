@@ -7,7 +7,6 @@ import log
 import logging
 from players.players import Players
 from ui.ui import UI
-from time import sleep
 from sm import StateMachine
 
 VERSION = '0.1'
@@ -19,8 +18,8 @@ class RadioPi(object):
     Main class for RadioPi
     '''
     players = None
-    '''An dictionary of all players. These are presented at the top level menu by
-    their key.'''
+    '''An dictionary of all players. These are presented at the top level menu
+    by their key.'''
     ui = None
     '''All UI stuff.'''
     current_player = None

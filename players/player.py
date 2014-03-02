@@ -30,7 +30,7 @@ class Player(object):
         '''
         raise NotImplementedError('Must be implemented in a derived class')
 
-    def add_item(self, uri):
+    def add_item(self, value):
         '''
         Add an item to the current playlist.
         '''

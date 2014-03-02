@@ -10,7 +10,6 @@ from lcdproc.client import Client
 import sys
 from ui.status import Status
 from ui.menu import Menu
-from ui.menuitem import MenuItem
 
 
 class UI(object):

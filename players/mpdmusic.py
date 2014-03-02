@@ -38,6 +38,18 @@ class MpdMusic(Player):
     '''
     mpd = None
     '''MPDClient instance.'''
+    browse_type = 0
+    '''The way that music is browsed.'''
+    BROWSE_NONE = 0
+    '''No browsing.'''
+    BROWSE_FILES = 1
+    '''Browsing files.'''
+    BROWSE_ARTIST = 2
+    '''Browsing by artist.'''
+    BROWSE_ALBUM = 3
+    '''Browsing by album.'''
+    BROWSE_TRACK = 4
+    '''Browsing by track.'''
 
     def __init__(self, mpd):
         '''
@@ -56,142 +68,121 @@ class MpdMusic(Player):
 
     def get_files(self, value, root):
         '''
-        Create a list of files and dirctories in the current value, wrapped in
+        Create a list of files and directories in the current value, wrapped in
         MenuItem classes.
         '''
         log.logger.debug('Selecting by filename.')
-        items = self.mpd.lsinfo(value.directory)
+        # Value is an emtpy string if this is the top level
+        if str(value) == '':
+            items = self.mpd.lsinfo(value)
+            directory = ''
+        else:
+            items = self.mpd.lsinfo(value['directory'])
+            directory = value['directory']
         menu = list()
         for item in items:
             if 'file' in item:
-                item_value = ItemValue(value.directory, item['file'], 'Files')
-                menu_item = MenuItem(item_value, basename(item['file']))
-                menu_item.root = root
-                # Hash the ID after the root has been added
-                menu_item.create_id()
+                menu_item = MenuItem([item], basename(item['file']), root=root)
                 menu.append(menu_item)
             elif 'directory' in item:
-                item_value = ItemValue(item['directory'], '', 'Files')
-                menu_item = MenuItem(item_value,
+                menu_item = MenuItem(item,
                                      relpath(item['directory'],
-                                             value.directory),
-                                     True)
-                menu_item.root = root
-                # Hash the ID after the root has been added
-                menu_item.create_id()
+                                             directory),
+                                     True, root=root)
                 menu.append(menu_item)
         return(menu)
 
-    def get_by_artist(self, value, root):
+    def get_by_artist(self, root):
         '''
-        Create a list of at first level artists, then albums by artists, then
-        songs.
+        Create a list of artists.
         '''
         log.logger.debug('Selecting by artist')
-        # Start by finding all artists
-        if value.artist == '':
-            log.logger.debug('Artist selection')
-            items = self.mpd.list('artist')
-            menu = list()
-            # Sort them before running through them
-            for item in sorted(items, key=cmp_to_key(locale.strcoll)):
-                item = item.replace('Artist: ', '')
-                if not item == '':
-                    item_value = ItemValue(artist=item,
-                                           browsetype='Artists')
-                    menu_item = MenuItem(item_value, item, True)
-                    menu_item.root = root
-                    # Hash the ID after the root has been added
-                    menu_item.create_id()
-                    menu.append(menu_item)
-            return(menu)
-        # An artist has been selected
+        items = self.mpd.list('artist')
+        menu = list()
+        # Sort them before running through them
+        for item in sorted(items, key=cmp_to_key(locale.strcoll)):
+            item = item.replace('Artist: ', '')
+            if not item == '':
+                menu_item = MenuItem(item, item, True, root=root)
+                menu.append(menu_item)
+        # Go to album selection next.
+        self.browse_type = self.BROWSE_ALBUM
+        return(menu)
+
+    def get_by_album(self, root, artist=''):
+        '''Create a list of albums, a optionally only by 'artist'.'''
+        log.logger.debug('Album selection. Artist: ' + artist)
+        if artist == '':
+            items = self.mpd.list('album')
         else:
-            # No album has been selected
-            if value.album == '':
-                log.logger.debug('Artist selection. Album: ' + value.artist)
-                items = self.mpd.search('artist', value.artist)
-                albums = set()
-                # Isolate albums
-                for item in items:
-                    albums.add(item['album'])
-                menu = list()
-                for album in albums:
-                    if not album == '':
-                        item_value = ItemValue(artist=value.artist,
-                                               album=album,
-                                               browsetype='Artists')
-                        menu_item = MenuItem(item_value, album, True)
-                        menu_item.root = root
-                        # Hash the ID after the root has been added
-                        menu_item.create_id()
-                        menu.append(menu_item)
-                return(menu)
-            # An album has been selected this is the final menu
-            else:
-                log.logger.debug('Track selection. Artist: ' + value.artist
-                                 + '. Album: ' + value.album)
-                items = self.mpd.search('artist', value.artist)
-                menu = list()
-                for item in items:
-                    # Only include the right tracks
-                    if item['album'] == value.album:
-                        item_value = ItemValue(filename=item['file'],
-                                               artist=value.artist,
-                                               album=value.album,
-                                               browsetype='Artists')
-                        menu_item = MenuItem(item_value, item['title'])
-                        menu_item.root = root
-                        # Hash the ID after the root has been added
-                        menu_item.create_id()
-                        menu.append(menu_item)
-                return(menu)
+            items = self.mpd.list('album', artist)
+        menu = list()
+        for item in items:
+            item = item.replace('Album: ', '')
+            if not item == '':
+                menu_item = MenuItem(item, item, True, root=root)
+                menu.append(menu_item)
+        # Select by track next
+        self.browse_type = self.BROWSE_TRACK
+        return(menu)
+
+    def get_by_track(self, root, album):
+        '''Create a list of tracks on an album.'''
+        log.logger.debug('Track selection. Album: ' + album)
+        items = self.mpd.search('album', album)
+        menu = list()
+        # Create an entry that plays the whole album
+        menu_item = MenuItem(items, 'All', root=root)
+        menu.append(menu_item)
+        for item in items:
+            menu_item = MenuItem([item], item['title'], root=root)
+            menu.append(menu_item)
+        return(menu)
 
     def get_items(self, value, root):
         '''
-        Return all items in value in a list og MenuItems. The first position in
-        the value can be either Albums, Artists, or Files, and generates a list
-        of the given type.
+        Return all items according to value.
         '''
         menu = list()
-        # Empty is a special case
+        # Empty is a special case, e.g. the browse type selection.
         if value == '':
-            menu = list()
             # Albums
-            menu_item = MenuItem(ItemValue(browsetype='Albums'), 'Albums',
-                                 True)
-            menu_item.root = root
-            # Hash the ID after the root has been added
-            menu_item.create_id()
+            menu_item = MenuItem(self.BROWSE_ALBUM, 'Albums', True, root=root)
             menu.append(menu_item)
             # Artists
-            menu_item = MenuItem(ItemValue(browsetype='Artists'), 'Artists',
-                                 True)
-            menu_item.root = root
-            # Hash the ID after the root has been added
-            menu_item.create_id()
+            menu_item = MenuItem(self.BROWSE_ARTIST, 'Artists', True,
+                                 root=root)
             menu.append(menu_item)
             # Files
-            menu_item = MenuItem(ItemValue(browsetype='Files'), 'Files', True)
-            menu_item.root = root
-            # Hash the ID after the root has been added
-            menu_item.create_id()
+            menu_item = MenuItem(self.BROWSE_FILES, 'Files', True, root=root)
             menu.append(menu_item)
-        if isinstance(value, ItemValue):
-            # File browser
-            if value.browsetype == 'Files':
+        else:
+            # If browse_type is BROWSE_NONE, this is the top level after
+            # browsing type has been selected.
+            if self.browse_type == self.BROWSE_NONE:
+                # Set the browse type from the value
+                self.browse_type = value
+                value = ''
+            # Call the right browser
+            if self.browse_type == self.BROWSE_FILES:
                 menu = self.get_files(value, root)
-            # Artists browser
-            if value.browsetype == 'Artists':
-                menu = self.get_by_artist(value, root)
+            elif self.browse_type == self.BROWSE_ARTIST:
+                menu = self.get_by_artist(root)
+            elif self.browse_type == self.BROWSE_ALBUM:
+                menu = self.get_by_album(root, value)
+            elif self.browse_type == self.BROWSE_TRACK:
+                menu = self.get_by_track(root, value)
         return(menu)
 
     def add_item(self, value):
         '''
-        Add an item to the playlist.
+        Add a list of items to the playlist.
         '''
-        log.logger.debug("Adding: " + value.filename)
-        self.mpd.add(value.filename)
+        log.logger.debug("Adding: " + str(value))
+        # Finished browsing
+        self.browse_type = self.BROWSE_NONE
+        for item in value:
+            self.mpd.add(item['file'])
 
     def play(self):
         '''

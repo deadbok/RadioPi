@@ -118,7 +118,6 @@ class UI(object):
         '''
         self.menu.generate_menu(root, items)
 
-
     def leave_menu(self, menu):
         '''
         A menu has been left.

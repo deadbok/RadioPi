@@ -49,9 +49,7 @@ class Menu(object):
         if 'dback' in self.menu:
             self.lcd.request('menu_del_item', '"' + menu
                                  + '" "dback"')
-        item = MenuItem('dback', '< Back', False, 'dback')
-        # Set root
-        item.root = menu
+        item = MenuItem('dback', '< Back', False, 'dback', root=menu)
         self.menu[item._id] = item
         self.lcd.request('menu_add_item', '"' + menu + '" "' + item._id
                              + '" action "' + item.text + '"')
@@ -71,13 +69,13 @@ class Menu(object):
         for item in items:
             log.logger.debug('Menu item: ' + item._id)
             log.logger.debug('Menu item text: ' + item.text)
-            # Check if its there already
-            if not item._id in self.menu.keys():
-                # Set root
-                # item.root = root
+            # If the item has not been send already
+            if item._id not in self.menu.keys():
+                # Send to LCDd
+                item.send(self.lcd)
                 # Save the entry
                 self.menu[item._id] = item
-                item.send(self.lcd)
+
             else:
                 log.logger.debug('Menu item has already been generated')
         # Create back button

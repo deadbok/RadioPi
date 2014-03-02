@@ -4,14 +4,13 @@ MenuItem holds a menu item!!!!! Wow.
 @since 17/02/2014
 @author: oblivion
 '''
-from uuid import uuid4
 
 
 class MenuItem(object):
     '''
     Class for an item in the menu.
     '''
-    id = ''
+    _id = ''
     '''The id assigned to the menu entry.'''
     text = ''
     '''The visible text of the menu item.'''
@@ -21,7 +20,7 @@ class MenuItem(object):
     '''Does this item have a submenu.'''
     root = ''
     '''Name of the root menu for this item.'''
-    def __init__(self, value, text, submenu=False, id=''):
+    def __init__(self, value, text, submenu=False, _id=''):
         '''
         Constructor.
         '''
@@ -31,11 +30,27 @@ class MenuItem(object):
         if id == '':
             self.create_id()
         else:
-            self.id = id
+            self._id = _id
 
     def create_id(self):
         '''
-        Create a unique id.
+        Create a id from text and root item.
         '''
-        self.id = str(hash(self.text + self.root))
-        return(self.id)
+        self._id = str(hash(self.text + self.root))
+        return(self._id)
+
+    def send(self, lcd):
+        '''Send the button to LCDd.'''
+        if self._id == '':
+            self.create_id()
+        if not self.submenu:
+            # Create an item that closes the menu when selected
+            lcd.request('menu_add_item', '"' + self.root + '" "'
+                             + self._id + '" action "' + self.text
+                             + '"')
+            lcd.request('menu_set_item', '"' + self.root + '" "'
+                             + self._id + '" -next _quit_')
+        else:
+            # Create a menu with sub items
+            lcd.request('menu_add_item', '"' + self.root + '" "'
+                             + self._id + '" menu "' + self.text + '"')

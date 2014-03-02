@@ -52,8 +52,8 @@ class Menu(object):
         item = MenuItem('dback', '< Back', False, 'dback')
         # Set root
         item.root = menu
-        self.menu[item.id] = item
-        self.lcd.request('menu_add_item', '"' + menu + '" "' + item.id
+        self.menu[item._id] = item
+        self.lcd.request('menu_add_item', '"' + menu + '" "' + item._id
                              + '" action "' + item.text + '"')
         self.lcd.request('menu_set_item', '"' + menu
                          + '" dback -menu_result close')
@@ -69,25 +69,15 @@ class Menu(object):
         log.logger.debug('Generating menu')
         # Create the menu
         for item in items:
-            log.logger.debug('Menu item: ' + item.id)
+            log.logger.debug('Menu item: ' + item._id)
             log.logger.debug('Menu item text: ' + item.text)
             # Check if its there already
-            if not item.id in self.menu.keys():
+            if not item._id in self.menu.keys():
                 # Set root
                 # item.root = root
                 # Save the entry
-                self.menu[item.id] = item
-                if not item.submenu:
-                    # Create an item that closes the menu when selected
-                    self.lcd.request('menu_add_item', '"' + root + '" "'
-                                     + item.id + '" action "' + item.text
-                                     + '"')
-                    self.lcd.request('menu_set_item', '"' + root + '" "'
-                                     + item.id + '" -next _quit_')
-                else:
-                    # Create a menu with sub items
-                    self.lcd.request('menu_add_item', '"' + root + '" "'
-                                     + item.id + '" menu "' + item.text + '"')
+                self.menu[item._id] = item
+                item.send(self.lcd)
             else:
                 log.logger.debug('Menu item has already been generated')
         # Create back button
@@ -112,7 +102,7 @@ class Menu(object):
             _, item = self.menu.popitem(True)
             # LCDd removes a menu when it is empty, so skip them
             if not item.submenu:
-                log.logger.debug('Menu     item: ' + item.id)
+                log.logger.debug('Menu     item: ' + item._id)
                 log.logger.debug('Menu item text: ' + item.text)
                 self.lcd.request('menu_del_item', '"' + item.root
-                                     + '" "' + item.id + '"')
+                                     + '" "' + item._id + '"')

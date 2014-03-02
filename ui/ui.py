@@ -10,6 +10,7 @@ from lcdproc.client import Client
 import sys
 from ui.status import Status
 from ui.menu import Menu
+from ui.menuitem import MenuItem
 
 
 class UI(object):
@@ -105,17 +106,18 @@ class UI(object):
         self.status.lines[2] = title
         self.status.update()
 
-    def get_value_from_id(self, id):
+    def get_value_from_id(self, _id):
         '''
         Get the value of a menu item from the id.
         '''
-        return(self.menu.menu[id.strip()].value)
+        return(self.menu.menu[_id.strip()].value)
 
     def enter_menu(self, root, items):
         '''
         A menu has been selected.
         '''
         self.menu.generate_menu(root, items)
+
 
     def leave_menu(self, menu):
         '''

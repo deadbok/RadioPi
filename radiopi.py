@@ -98,6 +98,8 @@ class RadioPi(object):
         self.state_machine.create_state('leave_menu', self.leave_menu)
         self.state_machine.create_state('play', self.play)
         self.state_machine.create_state('enter_menu', self.enter_menu)
+        self.state_machine.create_state('up', self.up)
+        self.state_machine.create_state('down', self.down)
 
     def default_update(self):
         '''
@@ -156,6 +158,20 @@ class RadioPi(object):
         if not self.current_player.playing:
             self.current_player.play()
 
+    def up(self):
+        '''
+        Up button pressed. Send to the current player.
+        '''
+        if not self.current_player == None:
+            self.current_player.up()
+
+    def down(self):
+        '''
+        Down button pressed. Send to the current player.
+        '''
+        if not self.current_player == None:
+            self.current_player.down()
+
     def main_loop(self):
         '''
         This is the main loop where the state machine is started.
@@ -194,6 +210,17 @@ class RadioPi(object):
             if 'leave' in event:
                 self.current_event = event.replace('leave ', '')
                 self.state_machine.queue_state('leave_menu')
+        # Key press
+        if 'key' in event:
+            event = event.replace('key', '')
+            # Save the event
+            self.current_event = event
+            # Up key
+            if 'Up' in event:
+                self.state_machine.queue_state('up')
+            # Down key
+            if 'Down' in event:
+                self.state_machine.queue_state('down')
         # Tell that we're done
         self.ui.leave_hook()
 

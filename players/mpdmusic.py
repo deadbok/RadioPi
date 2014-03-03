@@ -214,3 +214,15 @@ class MpdMusic(Player):
         items.append(MenuItem('Clear'))
 
         return(items)
+
+    def up(self):
+        '''
+        React when the 'Up' button is pressed.
+        '''
+        self.mpd.previous()
+
+    def down(self):
+        '''
+        React when the 'Down' button is pressed.
+        '''
+        self.mpd.next()

@@ -7,6 +7,12 @@ State machine for the main loop.
 import log
 from collections import deque
 
+class MissingStateError(Exception):
+    '''
+    Exception when trying to run a missing state.
+    '''
+    pass
+
 
 class StateMachine(object):
     '''
@@ -41,7 +47,11 @@ class StateMachine(object):
         else:
             name = self.state_queue.popleft()
             log.logger.debug('Running state: ' + name)
-        self.states[name]()
+        # Run state if it exists
+        if name in self.states.keys():
+            self.states[name]()
+        else:
+            raise MissingStateError('State machine missing state: ' + name)
 
     def queue_state(self, name):
         '''

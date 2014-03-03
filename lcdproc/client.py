@@ -47,21 +47,27 @@ class Client(object):
         '''
         self.hostname = hostname
         self.port = port
-        self.server = telnetlib.Telnet(self.hostname, self.port)
-        self.server_info = dict()
+        try:
+            self.server = telnetlib.Telnet(self.hostname, self.port)
+            self.server_info = dict()
 
-        # Send hello for session start
-        response = self._request_nopoll('hello', '')
-        # Split the return info and save data
-        bits = response.split(" ")
-        self.server_info.update({
-            "server_version": bits[2],
-            "protocol_version": bits[4],
-            "screen_width": int(bits[7]),
-            "screen_height": int(bits[9]),
-            "cell_width": int(bits[11]),
-            "cell_height": int(bits[13])
-        })
+            # Send hello for session start
+            response = self._request_nopoll('hello', '')
+            # Split the return info and save data
+            bits = response.split(" ")
+            self.server_info.update({
+                "server_version": bits[2],
+                "protocol_version": bits[4],
+                "screen_width": int(bits[7]),
+                "screen_height": int(bits[9]),
+                "cell_width": int(bits[11]),
+                "cell_height": int(bits[13])
+            })
+        except OSError as exception:
+            log.logger.info('Can not connect to LCDd on ' + self.hostname)
+            log.logger.debug('Exception: ' + str(exception.errno))
+            log.logger.debug('Message: ' + exception.strerror)
+            raise
 
     def _request_nopoll(self, command, param):
         '''

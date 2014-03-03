@@ -59,3 +59,15 @@ class Player(object):
         Generate menu items for control of the player.
         '''
         raise NotImplementedError('Must be implemented in a derived class')
+
+    def up(self):
+        '''
+        React when the 'Up' button is pressed.
+        '''
+        raise NotImplementedError('Must be implemented in a derived class')
+
+    def down(self):
+        '''
+        React when the 'Down' button is pressed.
+        '''
+        raise NotImplementedError('Must be implemented in a derived class')

@@ -41,18 +41,19 @@ class UI(object):
         log.logger.debug('Hostname: ' + hostname)
         log.logger.debug('Port: ' + str(port))
 
-        try:
-            self.lcd = Client(hostname, port)
-            self.lcd.request('client_set', '-name RadioPi')
-            log.logger.debug('Connection succeeded')
-        except OSError as exception:
-            log.logger.info('Can not connect to LCDd on ' + lcdd_host)
-            log.logger.debug('Exception: ' + str(exception.errno))
-            log.logger.debug('Message: ' + exception.strerror)
-            sys.exit(1)
+        self.lcd = Client(hostname, port)
+        self.lcd.request('client_set', '-name RadioPi')
+        log.logger.debug('Connection succeeded')
+
         # Initialise UI components
         self.status = Status(self.lcd)
         self.menu = Menu(self.lcd)
+        self.reserve_keys()
+
+    def reserve_keys(self):
+        '''Reserve keys for use during playback.'''
+        self.lcd.request('client_add_key', 'Up')
+        self.lcd.request('client_add_key', 'Down')
 
     def generate_root_menu(self, players):
         '''
@@ -116,12 +117,6 @@ class UI(object):
         A menu has been selected.
         '''
         self.menu.generate_menu(root, items)
-
-    def leave_menu(self, menu):
-        '''
-        A menu has been left.
-        '''
-        self.last_menu_name = menu
 
     def close(self):
         '''Close the connection to LCDd.'''

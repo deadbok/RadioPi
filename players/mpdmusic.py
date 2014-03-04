@@ -1,5 +1,5 @@
 '''
-This is the "Music" player, it uses MPD to play music from the filesystem.
+This is the "Music" player, it uses MPD to select music from the filesystem.
 '''
 import log
 import locale
@@ -34,7 +34,7 @@ class ItemValue(object):
 
 class MpdMusic(Player):
     '''
-    Class to use mpd to play music files.
+    Class to use mpd to select music files.
     '''
     mpd = None
     '''MPDClient instance.'''
@@ -50,6 +50,8 @@ class MpdMusic(Player):
     '''Browsing by album.'''
     BROWSE_TRACK = 4
     '''Browsing by track.'''
+    paused = False
+    '''Tell if we are paused.'''
 
     def __init__(self, mpd):
         '''
@@ -139,23 +141,24 @@ class MpdMusic(Player):
             menu.append(menu_item)
         return(menu)
 
-    def get_items(self, value, root):
+    def get_menu(self, value, root):
         '''
-        Return all items according to value.
+        Return a list of menu items. Value determines the type of menu.
         '''
         menu = list()
         # Empty is a special case, e.g. the browse type selection.
         if value == '':
+            # Play/pause
+            menu.append(MenuItem('pause', 'Play/Pause', root=root))
+            # Clear playlist
+            menu.append(MenuItem('clear', 'Clear', root=root))
             # Albums
-            menu_item = MenuItem(self.BROWSE_ALBUM, 'Albums', True, root=root)
-            menu.append(menu_item)
+            menu.append(MenuItem(self.BROWSE_ALBUM, 'Albums', True, root=root))
             # Artists
-            menu_item = MenuItem(self.BROWSE_ARTIST, 'Artists', True,
-                                 root=root)
-            menu.append(menu_item)
+            menu.append(MenuItem(self.BROWSE_ARTIST, 'Artists', True,
+                                 root=root))
             # Files
-            menu_item = MenuItem(self.BROWSE_FILES, 'Files', True, root=root)
-            menu.append(menu_item)
+            menu.append(MenuItem(self.BROWSE_FILES, 'Files', True, root=root))
         else:
             # If browse_type is BROWSE_NONE, this is the top level after
             # browsing type has been selected.
@@ -184,13 +187,59 @@ class MpdMusic(Player):
         for item in value:
             self.mpd.add(item['file'])
 
-    def play(self):
+    def select(self, value):
         '''
-        Play the current playlist.
+        Something has been selected. If the value is a list, play it, else it
+        is a string of the menu item selected.
         '''
-        log.logger.debug("Playing...")
-        self.playing = True
-        self.mpd.play(0)
+        log.logger.debug("Select: " + str(value))
+        # If value is not a string, it should be something we can play
+        if not isinstance(value, str):
+            # Add to playlist
+            self.add_item(value)
+            # Find out if something is playing (updates self.playing)
+            self.get_playing()
+            # Start playing if stopped
+            if not self.playing:
+                self.play()
+        else:
+            if value == 'clear':
+                self.mpd.clear()
+            elif value == 'pause':
+                self.pause()
+
+    def stop(self):
+        '''
+        Stop playing.
+        '''
+        log.logger.debug("Stop.")
+        self.mpd.stop()
+
+    def play(self, position=0):
+        '''
+        Play.
+        '''
+        log.logger.debug("Play.")
+        self.mpd.play(position)
+
+    def pause(self):
+        '''
+        Pause/unpause playing.
+        '''
+        # Check if we are paused.
+        if self.paused:
+            # Simple resume.
+            self.mpd.pause()
+            self.paused = False
+            log.logger.debug("Resume.")
+        else:
+            # Find out if something is playing (updates self.playing)
+            self.get_playing()
+            # If something is playing
+            if self.playing:
+                log.logger.debug("Pause.")
+                self.mpd.pause()
+                self.paused = True
 
     def get_playing(self):
         '''
@@ -199,21 +248,11 @@ class MpdMusic(Player):
         info = self.mpd.currentsong()
         if 'id' in info.keys():
             song = self.mpd.playlistid(info['id'])
+            self.playing = True
             return(song[0]['title'])
         else:
+            self.playing = False
             return('')
-
-    def menu_items(self):
-        '''
-        Generate menu items for control of the player.
-        '''
-        items = list()
-        items.append(MenuItem('Play/Pause'))
-        items.append(MenuItem('Next'))
-        items.append(MenuItem('Prev'))
-        items.append(MenuItem('Clear'))
-
-        return(items)
 
     def up(self):
         '''

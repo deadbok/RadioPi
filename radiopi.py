@@ -96,10 +96,11 @@ class RadioPi(object):
         self.state_machine.create_state('default_update', self.default_update)
         self.state_machine.set_default('default_update')
         self.state_machine.create_state('leave_menu', self.leave_menu)
-        self.state_machine.create_state('play', self.play)
+        self.state_machine.create_state('select', self.select)
         self.state_machine.create_state('enter_menu', self.enter_menu)
         self.state_machine.create_state('up', self.up)
         self.state_machine.create_state('down', self.down)
+        self.state_machine.create_state('enter', self.enter)
 
     def default_update(self):
         '''
@@ -131,13 +132,14 @@ class RadioPi(object):
         if self.current_event in self.players.players.keys():
             # Save the player
             self.current_player = self.players.players[self.current_event]
-            items = self.current_player.get_items('', self.current_event)
+            # Get the menu
+            items = self.current_player.get_menu('', self.current_event)
             self.ui.enter_menu(self.current_event, items)
             return()
         # If none of the above, we are dealing with an item specific to the
         # current player.
         value = self.ui.get_value_from_id(self.current_event)
-        items = self.current_player.get_items(value, self.current_event)
+        items = self.current_player.get_menu(value, self.current_event)
         self.ui.enter_menu(self.current_event, items)
 
     def leave_menu(self):
@@ -146,17 +148,17 @@ class RadioPi(object):
         '''
         pass
 
-    def play(self):
+    def select(self):
         '''
-        Play something if its the right thing to do. Called by the state
-        machine.
+        Something has been selected. If the value is a list, play it, else it
+        is a string of the menu item selected.
         '''
+        # If there is no player, bail out
+        if self.current_player == None:
+            return
+
         value = self.ui.get_value_from_id(self.current_event)
-        # Add to playlist
-        self.current_player.add_item(value)
-        # Start playing if stopped
-        if not self.current_player.playing:
-            self.current_player.play()
+        self.current_player.select(value)
 
     def up(self):
         '''
@@ -171,6 +173,17 @@ class RadioPi(object):
         '''
         if not self.current_player == None:
             self.current_player.down()
+
+    def enter(self):
+        '''
+        Enter button is pressed enter player menu or root menu.
+        '''
+        if not self.current_player == None:
+            self.ui.lcd.request('menu_goto', '"' + self.current_player.name
+                                + '"')
+        else:
+            # Root menu
+            self.ui.lcd.request('menu_goto', '""')
 
     def main_loop(self):
         '''
@@ -205,7 +218,7 @@ class RadioPi(object):
                 self.current_event = event.replace('select ', '')
                 # Ignore back button
                 if not 'back' in self.current_event:
-                    self.state_machine.queue_state('play')
+                    self.state_machine.queue_state('select')
             # The menu has been left
             if 'leave' in event:
                 self.current_event = event.replace('leave ', '')
@@ -221,6 +234,9 @@ class RadioPi(object):
             # Down key
             if 'Down' in event:
                 self.state_machine.queue_state('down')
+            # Enter key
+            if 'Enter' in event:
+                self.state_machine.queue_state('enter')
         # Tell that we're done
         self.ui.leave_hook()
 

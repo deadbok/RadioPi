@@ -54,6 +54,7 @@ class UI(object):
         '''Reserve keys for use during playback.'''
         self.lcd.request('client_add_key', 'Up')
         self.lcd.request('client_add_key', 'Down')
+        self.lcd.request('client_add_key', 'Enter')
 
     def generate_root_menu(self, players):
         '''

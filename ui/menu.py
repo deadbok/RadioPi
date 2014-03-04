@@ -87,11 +87,11 @@ class Menu(object):
         '''
         log.logger.debug('Deleting menu')
         # Delete back button first to save us some trouble.
-        # LCDd expect submenus to be deleted before menus. I haven't looked into
-        # What happens other than you can't delete a menu item, when the menu
-        # has been deleted. That is why I use an OrderedDict. The dynamic back
-        # button is changed with every menu change, and can't be expected to be
-        # at the right place in the dict
+        # LCDd expect sub-menus to be deleted before menus. I haven't looked
+        # into what happens other than you can't delete a menu item, when the
+        # menu has been deleted. That is why I use an OrderedDict. The dynamic
+        # back button is changed with every menu change, and can't be expected
+        # to be at the right place in the dict
         if 'dback' in self.menu:
             item = self.menu['dback']
             self.lcd.request('menu_del_item', '"' + item.root + '" "dback"')

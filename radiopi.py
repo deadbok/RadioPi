@@ -178,12 +178,10 @@ class RadioPi(object):
         '''
         Enter button is pressed enter player menu or root menu.
         '''
-        if not self.current_player == None:
-            self.ui.lcd.request('menu_goto', '"' + self.current_player.name
-                                + '"')
+        if self.current_player == None:
+            self.ui.menu.goto('')
         else:
-            # Root menu
-            self.ui.lcd.request('menu_goto', '""')
+            self.ui.menu.goto(self.current_player.name)
 
     def main_loop(self):
         '''
@@ -250,6 +248,7 @@ def main():
         radiopi.main_loop()
     finally:
         radiopi.ui.close()
+        radiopi.players.close()
 
 if __name__ == '__main__':
     main()

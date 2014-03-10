@@ -76,7 +76,7 @@ class UI(object):
         self.lcd.request('menu_add_item', '"" "back" action "< Back"')
         self.lcd.request('menu_set_item', '"" back -menu_result quit')
         # Set as root menu
-        self.menu.set_root_menu('')
+        self.menu.set_root('')
 
     def set_event_hook(self, hook):
         '''
@@ -117,8 +117,9 @@ class UI(object):
         '''
         A menu has been selected.
         '''
-        self.menu.generate_menu(root, items)
+        self.menu.generate(root, items)
 
     def close(self):
         '''Close the connection to LCDd.'''
-        self.lcd.close()
+        if not self.lcd == None:
+            self.lcd.close()

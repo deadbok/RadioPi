@@ -7,6 +7,7 @@ State machine for the main loop.
 import log
 from collections import deque
 
+
 class MissingStateError(Exception):
     '''
     Exception when trying to run a missing state.
@@ -19,7 +20,7 @@ class StateMachine(object):
     Simple state machine.
     '''
     states = dict()
-    '''A dict of all states, the keys are the names, the values the function.'''
+    '''A dict of all states, the keys are the names, the values the function'''
     state_queue = deque()
     '''Queue of states that needs to be run.'''
     default_state = ''

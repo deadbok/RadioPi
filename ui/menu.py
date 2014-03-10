@@ -34,7 +34,7 @@ class Menu(object):
         log.logger.debug("Initialising menus")
         self.lcd = lcd
 
-    def set_root_menu(self, menu):
+    def set_root(self, menu):
         '''
         There can be only one. Only display our menu.
         '''
@@ -57,7 +57,7 @@ class Menu(object):
                          + '" dback -menu_result close')
         return(item)
 
-    def generate_menu(self, root, items):
+    def generate(self, root, items):
         '''
         Generate a menu.
 
@@ -81,7 +81,7 @@ class Menu(object):
         # Create back button
         self.generate_back_item(root)
 
-    def delete_menu(self):
+    def delete(self):
         '''
         Delete a menu.
         '''
@@ -104,3 +104,9 @@ class Menu(object):
                 log.logger.debug('Menu item text: ' + item.text)
                 self.lcd.request('menu_del_item', '"' + item.root
                                      + '" "' + item._id + '"')
+
+    def goto(self, _id):
+        '''
+        Activate a specific menu.
+        '''
+        self.lcd.request('menu_goto', '"' + _id + '"')

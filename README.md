@@ -1,3 +1,9 @@
+Introduction
+============
+RadioPi is a music and internet radio player for Linux. RadioPi uses MPD for
+media play back, but other players can be added. The user interface is an
+HD44870 LCD and a rotary encoder using lcdproc as the middleware.
+ 
 Goals
 =====
 

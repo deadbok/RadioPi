@@ -26,7 +26,7 @@ from players.players import Players
 from ui.ui import UI
 from sm import StateMachine
 
-VERSION = '0.1'
+VERSION = '0.2'
 '''The current version.'''
 
 

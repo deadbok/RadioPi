@@ -1,4 +1,6 @@
 '''
+Base class for all media players.
+
 Copyright 2014 Martin Grønholdt
 
 This file is part of RadioPi.

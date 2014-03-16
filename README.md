@@ -22,6 +22,8 @@ LCD interface
  
 Web interface
 -------------
+The web interfaces has now been separated into RadioPiWeb
+
  * Adding and editing playlist files for MPD, for net radio links
  
  
@@ -36,6 +38,26 @@ Web interface
  ====
  Sorry about using both " and ' all over the place, I'm trying to use ' 
  consistently, but I have an old habit from my C days.
+
+
+ External stuff
+ ===========
+ Sometimes there are some quirks in the software that RadioPi depend on, this is
+ the place to write about them.
+ 
+ LCDproc
+ -------
+ I have wrestled a lot with lcdproc, especially the menus. Debugging, and at
+ least RadioPi would benefit from a "list_menus" command, that basically prints
+ out the internal menu structure from lcdproc to the client.
+ 
+ MPD
+ ---
+ For some reason MPD does not read extended info from M3U files placed in it's
+ 'playlist' directory. For now the internet radio play list are placed in the 
+ 'music' directory.
+ 
+ I hope to someday go ahead and look into these things and contribute back.
  
  Tips
  ====

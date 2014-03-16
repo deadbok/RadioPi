@@ -21,6 +21,7 @@ along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 import log
 import players.mpd
 from players.mpdmusic import MpdMusic
+from players.mpdnetradio import MpdNetRadio
 
 
 class Players(object):
@@ -40,7 +41,11 @@ class Players(object):
         # Initialise mpd
         self.mpd = players.mpd.connect(mpdhost)
         # Initialise music player
-        self.players['Music'] = MpdMusic(self.mpd)
+        mpdmusic = MpdMusic(self.mpd)
+        self.players[mpdmusic.name] = mpdmusic
+        # Initialise the net radio player
+        mpdnetradio = MpdNetRadio(self.mpd)
+        self.players[mpdnetradio.name] = mpdnetradio
 
     def close(self):
         '''

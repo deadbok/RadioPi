@@ -83,6 +83,7 @@ class MpdMusic(Player):
         # Remove the song from the playlist when done
         self.mpd.consume(1)
         # Clear the playlist
+        self.mpd.stop()
         self.mpd.clear()
 
     def get_files(self, value, root):

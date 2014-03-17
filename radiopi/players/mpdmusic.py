@@ -18,12 +18,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
+from radiopi.log import logger
 import locale
 from os.path import basename, relpath
 from functools import cmp_to_key
-from players.player import Player
-from ui.menuitem import MenuItem
+from radiopi.players.player import Player
+from radiopi.ui.menuitem import MenuItem
 
 
 class ItemValue(object):
@@ -74,7 +74,7 @@ class MpdMusic(Player):
         '''
         Constructor.
         '''
-        log.logger.debug("Creating mpd music player")
+        logger.debug("Creating mpd music player")
         Player.__init__(self, "Music")
         self.mpd = mpd
         # TODO: Remove this and make a menu entry or make it dynamic
@@ -91,7 +91,7 @@ class MpdMusic(Player):
         Create a list of files and directories in the current value, wrapped in
         MenuItem classes.
         '''
-        log.logger.debug('Selecting by filename.')
+        logger.debug('Selecting by filename.')
         # Value is an emtpy string if this is the top level
         if str(value) == '':
             items = self.mpd.lsinfo(value)
@@ -116,7 +116,7 @@ class MpdMusic(Player):
         '''
         Create a list of artists.
         '''
-        log.logger.debug('Selecting by artist')
+        logger.debug('Selecting by artist')
         items = self.mpd.list('artist')
         menu = list()
         # Sort them before running through them
@@ -131,7 +131,7 @@ class MpdMusic(Player):
 
     def get_by_album(self, root, artist=''):
         '''Create a list of albums, a optionally only by 'artist'.'''
-        log.logger.debug('Album selection. Artist: ' + artist)
+        logger.debug('Album selection. Artist: ' + artist)
         if artist == '':
             items = self.mpd.list('album')
         else:
@@ -148,7 +148,7 @@ class MpdMusic(Player):
 
     def get_by_track(self, root, album):
         '''Create a list of tracks on an album.'''
-        log.logger.debug('Track selection. Album: ' + album)
+        logger.debug('Track selection. Album: ' + album)
         items = self.mpd.search('album', album)
         menu = list()
         # Create an entry that plays the whole album
@@ -199,7 +199,7 @@ class MpdMusic(Player):
         '''
         Add a list of items to the playlist.
         '''
-        log.logger.debug("Adding: " + str(value))
+        logger.debug("Adding: " + str(value))
         # Finished browsing
         self.browse_type = self.BROWSE_NONE
         for item in value:
@@ -210,7 +210,7 @@ class MpdMusic(Player):
         Something has been selected. If the value is a list, play it, else it
         is a string of the menu item selected.
         '''
-        log.logger.debug("Select: " + str(value))
+        logger.debug("Select: " + str(value))
         # If value is not a string, it should be something we can play
         if not isinstance(value, str):
             # Add to playlist
@@ -230,14 +230,14 @@ class MpdMusic(Player):
         '''
         Stop playing.
         '''
-        log.logger.debug("Stop.")
+        logger.debug("Stop.")
         self.mpd.stop()
 
     def play(self, position=0):
         '''
         Play.
         '''
-        log.logger.debug("Play.")
+        logger.debug("Play.")
         self.mpd.play(position)
 
     def pause(self):
@@ -249,13 +249,13 @@ class MpdMusic(Player):
             # Simple resume.
             self.mpd.pause()
             self.paused = False
-            log.logger.debug("Resume.")
+            logger.debug("Resume.")
         else:
             # Find out if something is playing (updates self.playing)
             self.get_playing()
             # If something is playing
             if self.playing:
-                log.logger.debug("Pause.")
+                logger.debug("Pause.")
                 self.mpd.pause()
                 self.paused = True
 

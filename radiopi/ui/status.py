@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from time import localtime, strftime
-import log
+from radiopi.log import logger
 
 
 class Status(object):
@@ -38,7 +38,7 @@ class Status(object):
         @param lcd: The interface to LCDd.
         @type lcd: lcdproc.server.Server
         '''
-        log.logger.debug("Creating status screen.")
+        logger.debug("Creating status screen.")
         self.lcd = lcd
         # Create status screen
         lcd.request('screen_add', self.id)
@@ -53,7 +53,7 @@ class Status(object):
         '''
         Update the status display.
         '''
-        log.logger.debug("Updating status screen.")
+        logger.debug("Updating status screen.")
         # Update status line
         self.lines[0] = strftime('%H:%M', localtime())
         # Update custom lines

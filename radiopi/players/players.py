@@ -18,10 +18,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
-import players.mpd
-from players.mpdmusic import MpdMusic
-from players.mpdnetradio import MpdNetRadio
+from radiopi.log import logger
+import radiopi.players.mpd as mpd
+from radiopi.players.mpdmusic import MpdMusic
+from radiopi.players.mpdnetradio import MpdNetRadio
 
 
 class Players(object):
@@ -37,9 +37,9 @@ class Players(object):
         '''
         Constructor. "mpdhost" is the host and port of the mpd daemon.
         '''
-        log.logger.debug("Initialising players")
+        logger.debug("Initialising players")
         # Initialise mpd
-        self.mpd = players.mpd.connect(mpdhost)
+        self.mpd = mpd.connect(mpdhost)
         # Initialise music player
         mpdmusic = MpdMusic(self.mpd)
         self.players[mpdmusic.name] = mpdmusic

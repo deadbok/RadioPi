@@ -16,23 +16,5 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from .status import Status
-import log
 
-
-class Screens(object):
-    '''
-    Class holding the static LCD screens.
-    '''
-    status = None
-    '''Status screen (default screen)'''
-
-    def __init__(self, lcd):
-        '''
-        Constructor.
-
-        @param lcd: The interface to LCDd.
-        @type lcd: lcdproc.server.Server
-        '''
-        log.logger.debug('Creating screens.')
-        self.status = Status(lcd)
+__version__ = '0.2'

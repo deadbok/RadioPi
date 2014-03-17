@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
+from radiopi.log import logger
 
 
 class MenuItem(object):
@@ -39,8 +39,8 @@ class MenuItem(object):
         '''
         Constructor.
         '''
-        log.logger.debug('Creating menu item: ' + text)
-        log.logger.debug('Menu item root: ' + root)
+        logger.debug('Creating menu item: ' + text)
+        logger.debug('Menu item root: ' + root)
         self.text = text
         self.value = value
         self.submenu = submenu
@@ -55,12 +55,12 @@ class MenuItem(object):
         Create a id from text and root item.
         '''
         self._id = str(hash(self.text + self.root))
-        log.logger.debug('Creating menu id: ' + self._id)
+        logger.debug('Creating menu id: ' + self._id)
         return(self._id)
 
     def send(self, lcd):
         '''Send the button to LCDd.'''
-        log.logger.debug('Sending button: ' + self._id)
+        logger.debug('Sending button: ' + self._id)
         if not self.submenu:
             # Create an item that closes the menu when selected
             lcd.request('menu_add_item', '"' + self.root + '" "'

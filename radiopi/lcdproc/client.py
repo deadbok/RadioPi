@@ -23,7 +23,7 @@ import telnetlib
 from urllib.parse import unquote
 from select import select
 from collections import deque
-import log
+from radiopi.log import logger
 
 
 class LCDprocError(Exception):
@@ -81,9 +81,9 @@ class Client(object):
                 "cell_height": int(bits[13])
             })
         except OSError as exception:
-            log.logger.info('Can not connect to LCDd on ' + self.hostname)
-            log.logger.debug('Exception: ' + str(exception.errno))
-            log.logger.debug('Message: ' + exception.strerror)
+            logger.info('Can not connect to LCDd on ' + self.hostname)
+            logger.debug('Exception: ' + str(exception.errno))
+            logger.debug('Message: ' + exception.strerror)
             raise
 
     def _request_nopoll(self, command, param):
@@ -91,11 +91,11 @@ class Client(object):
         Send a request to LCDd, and return the response. This is a special case
         function only used for the initial chat with LCDd
         '''
-        log.logger.debug("Request: " + command + ' ' + param)
+        logger.debug("Request: " + command + ' ' + param)
         self.server.write((command + ' ' + param + "\n").encode())
 
         response = unquote(self.server.read_until(b"\n").decode())
-        log.logger.debug("Response: " + response)
+        logger.debug("Response: " + response)
 
         return(response)
 
@@ -104,7 +104,7 @@ class Client(object):
         Send a request to LCDd and wait for a response.
         '''
         # Send the commend
-        log.logger.debug("Request: " + command + ' ' + param)
+        logger.debug("Request: " + command + ' ' + param)
         self.server.write((command + ' ' + param + "\n").encode())
         # Wait for return status
         response = self.poll(True)
@@ -141,23 +141,23 @@ class Client(object):
         # Pass on queued responses if the hook is ready
         if not request:
             if (len(self.response_queue) > 0) and not (self.hook_busy):
-                log.logger.debug("Serving from queue.")
+                logger.debug("Serving from queue.")
                 self.response_hook(self.response_queue.popleft())
         # Check if server is ready for reading
         while select([self.server], [], [], 0) == ([self.server], [], []):
             response = unquote(self.server.read_until(b"\n").decode())
-            log.logger.debug("Response: " + response)
+            logger.debug("Response: " + response)
             # Do we understand the response
             if self.check_response(response):
                 if request:
-                    log.logger.debug('Leaving poll: ' + response)
+                    logger.debug('Leaving poll: ' + response)
                     return response
                 else:
                     raise ProtocolError('Unexpected response: ' + response)
             # Send the response on to the hook
             else:
                 if not self.response_hook == None:
-                    log.logger.debug('Adding to queue: ' + response)
+                    logger.debug('Adding to queue: ' + response)
                     self.response_queue.append(response)
         return(None)
 

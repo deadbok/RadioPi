@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
+from radiopi.log import logger
 from collections import deque
 
 
@@ -43,14 +43,14 @@ class StateMachine(object):
         '''
         Constructor
         '''
-        log.logger.debug('Creating state machine')
+        logger.debug('Creating state machine')
 
     def create_state(self, name, func):
         '''
         Add a state.
         '''
-        log.logger.debug('Adding state: ' + name)
-        log.logger.debug('Function: ' + str(func))
+        logger.debug('Adding state: ' + name)
+        logger.debug('Function: ' + str(func))
         self.states[name] = func
 
     def next_state(self):
@@ -61,7 +61,7 @@ class StateMachine(object):
             name = self.default_state
         else:
             name = self.state_queue.popleft()
-            log.logger.debug('Running state: ' + name)
+            logger.debug('Running state: ' + name)
         # Run state if it exists
         if name in self.states.keys():
             self.states[name]()
@@ -72,12 +72,12 @@ class StateMachine(object):
         '''
         Add a state to the queue.
         '''
-        log.logger.debug('Adding state to queue: ' + name)
+        logger.debug('Adding state to queue: ' + name)
         self.state_queue.append(name)
 
     def set_default(self, name):
         '''
         Set the default state.
         '''
-        log.logger.debug('Setting default state: ' + name)
+        logger.debug('Setting default state: ' + name)
         self.default_state = name

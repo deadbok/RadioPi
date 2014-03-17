@@ -18,11 +18,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
+from radiopi.log import logger
 from urllib.parse import urlparse
-from lcdproc.client import Client
-from ui.status import Status
-from ui.menu import Menu
+from radiopi.lcdproc.client import Client
+from radiopi.ui.status import Status
+from radiopi.ui.menu import Menu
 
 
 class UI(object):
@@ -37,8 +37,8 @@ class UI(object):
         '''
         Constructor
         '''
-        log.logger.debug("Initialising UI")
-        log.logger.info("Connecting to LCDd on " + lcdd_host)
+        logger.debug("Initialising UI")
+        logger.info("Connecting to LCDd on " + lcdd_host)
         # Parse the host address
         url = urlparse('//' + lcdd_host)
 
@@ -51,12 +51,12 @@ class UI(object):
         if port == None:
             port = 13666
 
-        log.logger.debug('Hostname: ' + hostname)
-        log.logger.debug('Port: ' + str(port))
+        logger.debug('Hostname: ' + hostname)
+        logger.debug('Port: ' + str(port))
 
         self.lcd = Client(hostname, port)
         self.lcd.request('client_set', '-name RadioPi')
-        log.logger.debug('Connection succeeded')
+        logger.debug('Connection succeeded')
 
         # Initialise UI components
         self.status = Status(self.lcd)
@@ -78,7 +78,7 @@ class UI(object):
         '''
         # The root menu is not saved in the internal dict, and therefore it is
         # never deleted
-        log.logger.debug("Generating root menu")
+        logger.debug("Generating root menu")
         # Root menu player entries
         for name in players.keys():
             self.lcd.request('menu_add_item', '"" "' + name + '" menu "'
@@ -95,7 +95,7 @@ class UI(object):
         '''
         Set the event hook into LCDd.
         '''
-        log.logger.debug("Setting event hook to: " + str(hook))
+        logger.debug("Setting event hook to: " + str(hook))
         # Route messages from LCDd to the hook function
         self.lcd.response_hook = hook
 
@@ -103,14 +103,14 @@ class UI(object):
         '''
         Tell that we are busy in the hook.
         '''
-        log.logger.debug('Entering lcd hook')
+        logger.debug('Entering lcd hook')
         self.lcd.hook_busy = True
 
     def leave_hook(self):
         '''
         Tell that we are ready again.
         '''
-        log.logger.debug('Leaving lcd hook')
+        logger.debug('Leaving lcd hook')
         self.lcd.hook_busy = False
 
     def status_update(self, title):

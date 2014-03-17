@@ -20,9 +20,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
+from radiopi.log import logger
 from collections import OrderedDict
-from ui.menuitem import MenuItem
+from radiopi.ui.menuitem import MenuItem
 
 
 class Menu(object):
@@ -48,7 +48,7 @@ class Menu(object):
         @param players: Dictionary of players and menu names
         @type players: dict
         '''
-        log.logger.debug("Initialising menus")
+        logger.debug("Initialising menus")
         self.lcd = lcd
 
     def set_root(self, menu):
@@ -61,7 +61,7 @@ class Menu(object):
         '''
         Generate a back navigation item.
         '''
-        log.logger.debug('Auto generating back button')
+        logger.debug('Auto generating back button')
         # Delete old back button
         if 'dback' in self.menu:
             self.lcd.request('menu_del_item', '"' + menu
@@ -81,11 +81,11 @@ class Menu(object):
         @param root: The menu item that the menu belongs to.
         @param items: A list of items the create in the menu.
         '''
-        log.logger.debug('Generating menu')
+        logger.debug('Generating menu')
         # Create the menu
         for item in items:
-            log.logger.debug('Menu item: ' + item._id)
-            log.logger.debug('Menu item text: ' + item.text)
+            logger.debug('Menu item: ' + item._id)
+            logger.debug('Menu item text: ' + item.text)
             # If the item has not been send already
             if item._id not in self.menu.keys():
                 # Send to LCDd
@@ -94,7 +94,7 @@ class Menu(object):
                 self.menu[item._id] = item
 
             else:
-                log.logger.debug('Menu item has already been generated')
+                logger.debug('Menu item has already been generated')
         # Create back button
         self.generate_back_item(root)
 
@@ -102,7 +102,7 @@ class Menu(object):
         '''
         Delete a menu.
         '''
-        log.logger.debug('Deleting menu')
+        logger.debug('Deleting menu')
         # Delete back button first to save us some trouble.
         # LCDd expect sub-menus to be deleted before menus. I haven't looked
         # into what happens other than you can't delete a menu item, when the
@@ -117,8 +117,8 @@ class Menu(object):
             _, item = self.menu.popitem(True)
             # LCDd removes a menu when it is empty, so skip them
             if not item.submenu:
-                log.logger.debug('Menu     item: ' + item._id)
-                log.logger.debug('Menu item text: ' + item.text)
+                logger.debug('Menu     item: ' + item._id)
+                logger.debug('Menu item text: ' + item.text)
                 self.lcd.request('menu_del_item', '"' + item.root
                                      + '" "' + item._id + '"')
 

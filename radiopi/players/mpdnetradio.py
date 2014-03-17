@@ -18,12 +18,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import log
-import locale
-from os.path import basename, relpath
-from functools import cmp_to_key
-from players.player import Player
-from ui.menuitem import MenuItem
+from radiopi.log import logger
+from radiopi.players.player import Player
+from radiopi.ui.menuitem import MenuItem
 
 
 STATION_LIST_PATH = 'netradio'
@@ -43,7 +40,7 @@ class MpdNetRadio(Player):
         '''
         Constructor.
         '''
-        log.logger.debug("Creating mpd net radio player")
+        logger.debug("Creating mpd net radio player")
         Player.__init__(self, "Net Radio")
         self.mpd = mpd
         # TODO: Remove this and make a menu entry or make it dynamic
@@ -57,7 +54,7 @@ class MpdNetRadio(Player):
 
     def get_stations(self, root, value):
         '''Create a lists stations in a list.'''
-        log.logger.debug('Station menu.')
+        logger.debug('Station menu.')
         if 'playlist' in value:
             items = self.mpd.listplaylistinfo(value['playlist'])
             menu = list()
@@ -69,7 +66,7 @@ class MpdNetRadio(Player):
 
     def get_station_lists(self, root):
         '''Create a list station lists.'''
-        log.logger.debug('Station lists')
+        logger.debug('Station lists')
         items = self.mpd.lsinfo(STATION_LIST_PATH)
         menu = list()
         for item in items:
@@ -103,7 +100,7 @@ class MpdNetRadio(Player):
         '''
         Add a list of items to the playlist.
         '''
-        log.logger.debug("Adding: " + str(value))
+        logger.debug("Adding: " + str(value))
         self.mpd.add(value['file'])
 
     def select(self, value):
@@ -111,7 +108,7 @@ class MpdNetRadio(Player):
         Something has been selected. If the value is a list, play it, else it
         is a string of the menu item selected.
         '''
-        log.logger.debug("Select: " + str(value))
+        logger.debug("Select: " + str(value))
         # If value is not a string, it should be something we can play
         if not isinstance(value, str):
             # Add to playlist
@@ -129,14 +126,14 @@ class MpdNetRadio(Player):
         '''
         Stop playing.
         '''
-        log.logger.debug("Stop.")
+        logger.debug("Stop.")
         self.mpd.stop()
 
     def play(self, position=0):
         '''
         Play.
         '''
-        log.logger.debug("Play.")
+        logger.debug("Play.")
         self.mpd.play(position)
 
     def pause(self):
@@ -148,13 +145,13 @@ class MpdNetRadio(Player):
             # Simple resume.
             self.mpd.pause()
             self.paused = False
-            log.logger.debug("Resume.")
+            logger.debug("Resume.")
         else:
             # Find out if something is playing (updates self.playing)
             self.get_playing()
             # If something is playing
             if self.playing:
-                log.logger.debug("Pause.")
+                logger.debug("Pause.")
                 self.mpd.pause()
                 self.paused = True
 

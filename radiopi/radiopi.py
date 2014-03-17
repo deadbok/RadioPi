@@ -1,6 +1,5 @@
 '''
-Main file for RadioPi, an interface between various programs and an LCD, to
-function as a sort of transistor radio/media player.
+Main file for RadioPi class.
 
 Copyright 2014 Martin Grønholdt
 
@@ -20,14 +19,15 @@ You should have received a copy of the GNU General Public License
 along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import optparse
-import log
+from radiopi.log import init_file_log, init_console_log, logger, close_log
 import logging
-from players.players import Players
-from ui.ui import UI
-from sm import StateMachine
+from radiopi.players.players import Players
+from radiopi.ui.ui import UI
+from radiopi.sm import StateMachine
+from radiopi import __version__
 
-VERSION = '0.2'
-'''The current version.'''
+# VERSION = '0.2'
+# '''The current version.'''
 
 
 class RadioPi(object):
@@ -70,27 +70,27 @@ class RadioPi(object):
         (options, args) = arg_parser.parse_args()
 
         if options.log_level == 0:
-            log.init_file_log(logging.NOTSET)
+            init_file_log(logging.NOTSET)
         elif options.log_level == 1:
-            log.init_file_log(logging.DEBUG)
+            init_file_log(logging.DEBUG)
         elif options.log_level == 2:
-            log.init_file_log(logging.INFO)
+            init_file_log(logging.INFO)
         elif options.log_level == 3:
-            log.init_file_log(logging.WARNING)
+            init_file_log(logging.WARNING)
         elif options.log_level == 4:
-            log.init_file_log(logging.ERROR)
+            init_file_log(logging.ERROR)
         elif options.log_level == 5:
-            log.init_file_log(logging.CRITICAL)
+            init_file_log(logging.CRITICAL)
         else:
-            log.init_file_log(logging.INFO)
+            init_file_log(logging.INFO)
         if options.verbose:
-            log.init_console_log(logging.DEBUG)
+            init_console_log(logging.DEBUG)
         elif options.quiet:
-            log.init_console_log(logging.ERROR)
+            init_console_log(logging.ERROR)
         else:
-            log.init_console_log()
+            init_console_log()
 
-        log.logger.info("RadioPi V" + VERSION)
+        logger.info("RadioPi V" + __version__)
 
         # Hostname for LCDd
         lcd_host = "localhost"
@@ -220,7 +220,7 @@ class RadioPi(object):
         self.ui.enter_hook()
 
         event = event.strip('\n')
-        log.logger.debug("Event: " + event)
+        logger.debug("Event: " + event)
         # Process menu events
         if 'menuevent' in event:
             event = event.replace('menuevent ', '')
@@ -254,18 +254,3 @@ class RadioPi(object):
                 self.state_machine.queue_state('enter')
         # Tell that we're done
         self.ui.leave_hook()
-
-
-def main():
-    '''
-    The entry point.
-    '''
-    try:
-        radiopi = RadioPi()
-        radiopi.main_loop()
-    finally:
-        radiopi.ui.close()
-        radiopi.players.close()
-
-if __name__ == '__main__':
-    main()

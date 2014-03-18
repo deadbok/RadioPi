@@ -22,6 +22,7 @@ along with RadioPi.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from radiopi.radiopi import RadioPi
 
+
 def main():
     '''
     The entry point.
@@ -30,8 +31,8 @@ def main():
         radiopi = RadioPi()
         radiopi.main_loop()
     finally:
-        radiopi.ui.close()
-        radiopi.players.close()
+        radiopi.close()
+
 
 if __name__ == '__main__':
     main()

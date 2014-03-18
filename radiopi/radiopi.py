@@ -65,7 +65,7 @@ class RadioPi(object):
                               help="Only print errors")
         arg_parser.add_option("-l", "--log-level",
                               type="int", default=2,
-                              help="Set the logging level for the log files (0-5)"
+                              help="Set the log level for the log files (0-5)"
                               )
         (options, args) = arg_parser.parse_args()
 
@@ -254,3 +254,11 @@ class RadioPi(object):
                 self.state_machine.queue_state('enter')
         # Tell that we're done
         self.ui.leave_hook()
+
+    def close(self):
+        '''
+        Cleanup when closing.
+        '''
+        self.players.close()
+        self.ui.close()
+        close_log()
